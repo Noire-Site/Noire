@@ -1,0 +1,267 @@
+/* TEAM 4 — Checkout: Multi-step form with promo code, order summary, confirmation */
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
+
+const InputField = ({ label, field, type = 'text', placeholder, form, errors, update }) => (
+  <div>
+    <label className="block text-sm font-medium mb-1.5">{label}</label>
+    <input
+      type={type}
+      value={form[field]}
+      onChange={(e) => update(field, e.target.value)}
+      placeholder={placeholder}
+      className={`w-full px-4 py-3 bg-white dark:bg-[#1A1A1A] border rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all ${
+        errors[field] ? 'border-red-500' : 'border-brand-gray-light dark:border-[#2A2A2A]'
+      }`}
+    />
+    {errors[field] && <p className="text-xs text-red-500 mt-1">{errors[field]}</p>}
+  </div>
+);
+
+const steps = ['Details', 'Shipping', 'Payment'];
+
+export default function Checkout() {
+  const { items, subtotal, discount, total, promoCode, applyPromo, removePromo, clearCart, itemCount } = useCart();
+  const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+  const [promoInput, setPromoInput] = useState('');
+  const [promoMsg, setPromoMsg] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const [form, setForm] = useState({
+    name: '', email: '', phone: '',
+    address: '', city: '', country: '', postal: '',
+    cardNumber: '', expiry: '', cvv: '',
+  });
+
+  const update = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
+  const validateStep = () => {
+    const errs = {};
+    if (step === 0) {
+      if (!form.name.trim()) errs.name = 'Name is required';
+      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Valid email is required';
+      if (!form.phone.trim()) errs.phone = 'Phone is required';
+    }
+    if (step === 1) {
+      if (!form.address.trim()) errs.address = 'Address is required';
+      if (!form.city.trim()) errs.city = 'City is required';
+      if (!form.country.trim()) errs.country = 'Country is required';
+      if (!form.postal.trim()) errs.postal = 'PIN code is required';
+    }
+    if (step === 2) {
+      if (!form.cardNumber.trim() || form.cardNumber.replace(/\s/g, '').length < 16) errs.cardNumber = 'Valid card number is required';
+      if (!form.expiry.trim() || !/^\d{2}\/\d{2}$/.test(form.expiry)) errs.expiry = 'MM/YY format required';
+      if (!form.cvv.trim() || form.cvv.length < 3) errs.cvv = 'Valid CVV is required';
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleNext = () => {
+    if (!validateStep()) return;
+    if (step < 2) setStep(step + 1);
+    else handleSubmit();
+  };
+
+  const handleSubmit = () => {
+    const num = 'TD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    setOrderNumber(num);
+    clearCart();
+  };
+
+  const handlePromo = () => {
+    const result = applyPromo(promoInput);
+    setPromoMsg(result.message);
+  };
+
+  // Empty cart redirect
+  if (items.length === 0 && !orderNumber) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <h1 className="font-heading text-4xl mb-4">YOUR BAG IS EMPTY</h1>
+        <p className="text-brand-gray mb-6">Add some items before checking out.</p>
+        <Link to="/shop" className="inline-block bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3 rounded-pill font-medium transition-colors">
+          Shop Now
+        </Link>
+      </main>
+    );
+  }
+
+  // Order confirmation
+  if (orderNumber) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="mb-6">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="font-heading text-4xl sm:text-5xl mb-2">ORDER CONFIRMED</h1>
+          <p className="text-brand-gray">Thanks for shopping with Nøiré.</p>
+        </div>
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-6 mb-8">
+          <p className="text-sm text-brand-gray mb-1">Order Number</p>
+          <p className="font-mono text-2xl font-bold text-brand-orange">{orderNumber}</p>
+          <p className="text-sm text-brand-gray mt-4">We'll send a confirmation email to <strong>{form.email}</strong></p>
+        </div>
+        <Link to="/shop" className="inline-block bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3 rounded-pill font-medium transition-colors">
+          Continue Shopping
+        </Link>
+      </main>
+    );
+  }
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <Link to="/shop" className="text-sm text-brand-gray hover:text-brand-orange transition-colors mb-6 inline-block">← Continue Shopping</Link>
+      <h1 className="font-heading text-4xl sm:text-5xl mb-8">CHECKOUT</h1>
+
+      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+        {/* Form */}
+        <div className="lg:col-span-2">
+          {/* Progress */}
+          <div className="flex items-center mb-8">
+            {steps.map((s, i) => (
+              <div key={s} className="flex items-center">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-mono font-bold transition-colors ${
+                  i <= step ? 'bg-brand-orange text-white' : 'bg-brand-gray-light dark:bg-[#2A2A2A] text-brand-gray'
+                }`}>
+                  {i + 1}
+                </div>
+                <span className={`ml-2 text-sm font-medium ${i <= step ? 'text-brand-black dark:text-brand-offwhite' : 'text-brand-gray'}`}>{s}</span>
+                {i < steps.length - 1 && <div className={`w-12 sm:w-20 h-px mx-3 ${i < step ? 'bg-brand-orange' : 'bg-brand-gray-light dark:bg-[#2A2A2A]'}`} />}
+              </div>
+            ))}
+          </div>
+
+          {/* Step 1: Details */}
+          {step === 0 && (
+            <div className="space-y-4">
+              <InputField label="Full Name" field="name" placeholder="John Doe" form={form} errors={errors} update={update} />
+              <InputField label="Email" field="email" type="email" placeholder="john@email.com" form={form} errors={errors} update={update} />
+              <InputField label="Phone" field="phone" type="tel" placeholder="+91 98765 43210" form={form} errors={errors} update={update} />
+            </div>
+          )}
+
+          {/* Step 2: Shipping */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <InputField label="Street Address" field="address" placeholder="123 Main St" form={form} errors={errors} update={update} />
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="City" field="city" placeholder="New York" form={form} errors={errors} update={update} />
+                <InputField label="Country" field="country" placeholder="India" form={form} errors={errors} update={update} />
+              </div>
+              <InputField label="PIN Code" field="postal" placeholder="110001" form={form} errors={errors} update={update} />
+            </div>
+          )}
+
+          {/* Step 3: Payment */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-4 mb-4">
+                <p className="text-xs text-brand-gray font-mono uppercase tracking-wider mb-2">💳 This is a demo — no real payment will be processed</p>
+              </div>
+              <InputField label="Card Number" field="cardNumber" placeholder="4242 4242 4242 4242" form={form} errors={errors} update={update} />
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="Expiry" field="expiry" placeholder="12/28" form={form} errors={errors} update={update} />
+                <InputField label="CVV" field="cvv" placeholder="123" form={form} errors={errors} update={update} />
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex gap-3 mt-8">
+            {step > 0 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="px-6 py-3 border-2 border-brand-gray-light dark:border-[#2A2A2A] rounded-pill font-medium hover:border-brand-orange transition-colors"
+              >
+                Back
+              </button>
+            )}
+            <button
+              onClick={handleNext}
+              className="flex-1 bg-brand-orange hover:bg-brand-orange-hover text-white py-3 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5"
+            >
+              {step === 2 ? 'Place Order' : 'Continue'}
+            </button>
+          </div>
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-6 sticky top-24">
+            <h2 className="font-heading text-xl mb-4">ORDER SUMMARY</h2>
+            <div className="space-y-3 mb-6">
+              {items.map(item => (
+                <div key={item.key} className="flex gap-3">
+                  <div className="w-12 h-14 rounded-md shrink-0" style={{ background: item.image }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium line-clamp-1">{item.name}</p>
+                    <p className="text-xs text-brand-gray">{item.size} / {item.color} × {item.quantity}</p>
+                  </div>
+                  <p className="font-mono text-sm font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Promo code */}
+            <div className="border-t border-brand-gray-light dark:border-[#2A2A2A] pt-4 mb-4">
+              {promoCode ? (
+                <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md">
+                  <span className="text-sm font-mono text-green-700 dark:text-green-400">{promoCode} applied</span>
+                  <button onClick={removePromo} className="text-xs text-red-500 hover:text-red-700">Remove</button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      placeholder="Promo code"
+                      className="flex-1 px-3 py-2 text-sm bg-transparent border border-brand-gray-light dark:border-[#2A2A2A] rounded-md focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                      aria-label="Promo code"
+                    />
+                    <button onClick={handlePromo} className="text-sm font-medium text-brand-orange hover:text-brand-orange-hover transition-colors">Apply</button>
+                  </div>
+                  <p className="text-xs text-brand-gray mt-1">Try NOIRE20 for 20% off.</p>
+                </div>
+              )}
+              {promoMsg && !promoCode && <p className="text-xs text-red-500 mt-1">{promoMsg}</p>}
+            </div>
+
+            {/* Totals */}
+            <div className="space-y-2 border-t border-brand-gray-light dark:border-[#2A2A2A] pt-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-gray">Subtotal</span>
+                <span className="font-mono">₹{subtotal.toFixed(2)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Discount (20%)</span>
+                  <span className="font-mono">-₹{discount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-gray">Shipping</span>
+                <span className="font-mono">{subtotal >= 5000 ? 'Free' : '₹499'}</span>
+              </div>
+              <div className="flex justify-between font-bold text-lg pt-2 border-t border-brand-gray-light dark:border-[#2A2A2A]">
+                <span>Total</span>
+                <span className="font-mono">₹{(total + (subtotal >= 5000 ? 0 : 499)).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

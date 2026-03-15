@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "name": "Ember Oversized Hoodie",
+    "slug": "ember-oversized-hoodie",
+    "category": "Men",
+    "price": 7499,
+    "salePrice": null,
+    "tags": ["New Drop"],
+    "sizes": ["S", "M", "L", "XL", "XXL"],
+    "colors": [
+      { "name": "Charcoal", "hex": "#2D2D2D" },
+      { "name": "Rust", "hex": "#A0522D" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #2D2D2D 0%, #FF4500 100%)",
+      "hover": "linear-gradient(135deg, #FF4500 0%, #2D2D2D 100%)"
+    },
+    "stock": 24,
+    "description": "Heavyweight cotton hoodie with a dropped shoulder and oversized fit — made for layering."
+  },
+  {
+    "id": 2,
+    "name": "Asphalt Cargo Pants",
+    "slug": "asphalt-cargo-pants",
+    "category": "Men",
+    "price": 8999,
+    "salePrice": null,
+    "tags": ["New Drop"],
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      { "name": "Slate", "hex": "#4A4A4A" },
+      { "name": "Sand", "hex": "#C2B280" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #4A4A4A 0%, #C2B280 100%)",
+      "hover": "linear-gradient(135deg, #C2B280 0%, #4A4A4A 100%)"
+    },
+    "stock": 18,
+    "description": "Utility-driven cargo pants with six pockets and a relaxed tapered leg."
+  },
+  {
+    "id": 3,
+    "name": "Grid Graphic Tee",
+    "slug": "grid-graphic-tee",
+    "category": "Men",
+    "price": 3799,
+    "salePrice": 2499,
+    "tags": ["Sale"],
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      { "name": "White", "hex": "#FFFFFF" },
+      { "name": "Black", "hex": "#0D0D0D" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #F5F2EE 0%, #0D0D0D 100%)",
+      "hover": "linear-gradient(135deg, #0D0D0D 0%, #F5F2EE 100%)"
+    },
+    "stock": 3,
+    "description": "Boxy fit graphic tee with a grid-pattern screenprint across the chest."
+  },
+  {
+    "id": 4,
+    "name": "Dusk Satin Slip Dress",
+    "slug": "dusk-satin-slip-dress",
+    "category": "Women",
+    "price": 7999,
+    "salePrice": null,
+    "tags": ["New Drop"],
+    "sizes": ["XS", "S", "M", "L"],
+    "colors": [
+      { "name": "Midnight", "hex": "#191970" },
+      { "name": "Blush", "hex": "#DE9E9E" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #191970 0%, #DE9E9E 100%)",
+      "hover": "linear-gradient(135deg, #DE9E9E 0%, #191970 100%)"
+    },
+    "stock": 12,
+    "description": "Silky satin slip dress that goes from daytime to late-night effortlessly."
+  },
+  {
+    "id": 5,
+    "name": "Ribbed Crop Jacket",
+    "slug": "ribbed-crop-jacket",
+    "category": "Women",
+    "price": 9999,
+    "salePrice": null,
+    "tags": ["Limited"],
+    "sizes": ["XS", "S", "M", "L"],
+    "colors": [
+      { "name": "Olive", "hex": "#556B2F" },
+      { "name": "Cream", "hex": "#FFFDD0" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #556B2F 0%, #FFFDD0 100%)",
+      "hover": "linear-gradient(135deg, #FFFDD0 0%, #556B2F 100%)"
+    },
+    "stock": 6,
+    "description": "Cropped ribbed jacket with snap buttons and a fitted silhouette — limited run."
+  },
+  {
+    "id": 6,
+    "name": "Fade Track Shorts",
+    "slug": "fade-track-shorts",
+    "category": "Women",
+    "price": 4599,
+    "salePrice": 3199,
+    "tags": ["Sale"],
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "colors": [
+      { "name": "Faded Black", "hex": "#333333" },
+      { "name": "Lavender", "hex": "#B57EDC" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #333333 0%, #B57EDC 100%)",
+      "hover": "linear-gradient(135deg, #B57EDC 0%, #333333 100%)"
+    },
+    "stock": 22,
+    "description": "Lightweight track shorts with side stripes and a gradient fade wash."
+  },
+  {
+    "id": 7,
+    "name": "Void Oversized Tee",
+    "slug": "void-oversized-tee",
+    "category": "Unisex",
+    "price": 3999,
+    "salePrice": null,
+    "tags": ["New Drop"],
+    "sizes": ["S", "M", "L", "XL", "XXL"],
+    "colors": [
+      { "name": "Black", "hex": "#0D0D0D" },
+      { "name": "Off-White", "hex": "#F5F2EE" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #0D0D0D 0%, #5A5651 100%)",
+      "hover": "linear-gradient(135deg, #5A5651 0%, #0D0D0D 100%)"
+    },
+    "stock": 30,
+    "description": "The essential oversized tee — blank canvas energy with a heavyweight feel."
+  },
+  {
+    "id": 8,
+    "name": "Signal Zip-Up",
+    "slug": "signal-zip-up",
+    "category": "Unisex",
+    "price": 7999,
+    "salePrice": null,
+    "tags": ["New Drop"],
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      { "name": "Electric Orange", "hex": "#FF4500" },
+      { "name": "Graphite", "hex": "#383838" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #FF4500 0%, #383838 100%)",
+      "hover": "linear-gradient(135deg, #383838 0%, #FF4500 100%)"
+    },
+    "stock": 15,
+    "description": "Full-zip track jacket in signature orange — the piece that turns heads."
+  },
+  {
+    "id": 9,
+    "name": "Static Sweatpants",
+    "slug": "static-sweatpants",
+    "category": "Unisex",
+    "price": 5999,
+    "salePrice": null,
+    "tags": [],
+    "sizes": ["S", "M", "L", "XL", "XXL"],
+    "colors": [
+      { "name": "Heather Gray", "hex": "#9E9E9E" },
+      { "name": "Black", "hex": "#0D0D0D" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #9E9E9E 0%, #0D0D0D 100%)",
+      "hover": "linear-gradient(135deg, #0D0D0D 0%, #9E9E9E 100%)"
+    },
+    "stock": 40,
+    "description": "Relaxed-fit fleece sweats with ribbed cuffs — your new uniform."
+  },
+  {
+    "id": 10,
+    "name": "Drop Cap (Snapback)",
+    "slug": "drop-cap-snapback",
+    "category": "Accessories",
+    "price": 2999,
+    "salePrice": null,
+    "tags": ["New Drop"],
+    "sizes": ["One Size"],
+    "colors": [
+      { "name": "Black", "hex": "#0D0D0D" },
+      { "name": "Orange", "hex": "#FF4500" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #0D0D0D 0%, #FF4500 100%)",
+      "hover": "linear-gradient(135deg, #FF4500 0%, #0D0D0D 100%)"
+    },
+    "stock": 50,
+    "description": "Structured snapback with embroidered Nøiré logo on the front."
+  },
+  {
+    "id": 11,
+    "name": "Nøiré Tote Bag",
+    "slug": "nøiré-tote-bag",
+    "category": "Accessories",
+    "price": 2299,
+    "salePrice": null,
+    "tags": ["Nøiré Exclusive"],
+    "sizes": ["One Size"],
+    "colors": [
+      { "name": "Natural", "hex": "#E8E4DF" },
+      { "name": "Black", "hex": "#0D0D0D" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #E8E4DF 0%, #5A5651 100%)",
+      "hover": "linear-gradient(135deg, #5A5651 0%, #E8E4DF 100%)"
+    },
+    "stock": 60,
+    "description": "Heavy-duty canvas tote with screenprinted logo — carry Nøiré everywhere."
+  },
+  {
+    "id": 12,
+    "name": "Ember Beanie",
+    "slug": "ember-beanie",
+    "category": "Accessories",
+    "price": 1799,
+    "salePrice": 1249,
+    "tags": ["Sale"],
+    "sizes": ["One Size"],
+    "colors": [
+      { "name": "Black", "hex": "#0D0D0D" },
+      { "name": "Burnt Orange", "hex": "#CC5500" }
+    ],
+    "images": {
+      "primary": "linear-gradient(135deg, #0D0D0D 0%, #CC5500 100%)",
+      "hover": "linear-gradient(135deg, #CC5500 0%, #0D0D0D 100%)"
+    },
+    "stock": 35,
+    "description": "Ribbed-knit beanie with woven label — winter essential, no cap."
+  }
+]
