@@ -1,20 +1,15 @@
 /* Account Page: Profile, Shipping Addresses, Order History, Settings */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { supabase } from '../utils/supabase';
 
 const tabs = [
   { id: 'profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   { id: 'addresses', label: 'Addresses', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
   { id: 'orders', label: 'Orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
   { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-];
-
-const demoOrders = [
-  { id: 'NR-7K2M4X', date: '2026-03-10', status: 'Delivered', items: 3, total: 18497 },
-  { id: 'NR-9P3L1W', date: '2026-02-24', status: 'Delivered', items: 1, total: 7499 },
-  { id: 'NR-5T8N6R', date: '2026-02-01', status: 'Delivered', items: 2, total: 12998 },
 ];
 
 const statusColor = {
@@ -30,11 +25,29 @@ export default function Account() {
   const { dark, toggle } = useTheme();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
-  const [addresses, setAddresses] = useState([
-    { id: 1, label: 'Home', name: '', address: '123 Main Street', city: 'Mumbai', state: 'Maharashtra', postal: '400001', phone: '+91 98765 43210', isDefault: true },
-  ]);
+  const [addresses, setAddresses] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [editingAddress, setEditingAddress] = useState(null);
   const [addressForm, setAddressForm] = useState({ label: '', name: '', address: '', city: '', state: '', postal: '', phone: '' });
+
+  // Fetch addresses & orders from Supabase
+  useEffect(() => {
+    if (!user) return;
+    const userId = user.id;
+
+    async function fetchData() {
+      setLoading(true);
+      const [addrRes, orderRes] = await Promise.all([
+        supabase.from('addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }),
+        supabase.from('orders').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      ]);
+      if (addrRes.data) setAddresses(addrRes.data);
+      if (orderRes.data) setOrders(orderRes.data);
+      setLoading(false);
+    }
+    fetchData();
+  }, [user]);
 
   if (!isLoaded) {
     return (
@@ -61,28 +74,42 @@ export default function Account() {
     setAddressForm(addr ? { label: addr.label, name: addr.name, address: addr.address, city: addr.city, state: addr.state, postal: addr.postal, phone: addr.phone } : { label: '', name: '', address: '', city: '', state: '', postal: '', phone: '' });
   };
 
-  const saveAddress = () => {
+  const saveAddress = async () => {
     if (!addressForm.address.trim() || !addressForm.city.trim()) return;
+    const userId = user.id;
+
     if (editingAddress === 'new') {
-      setAddresses(prev => [...prev, { ...addressForm, id: Date.now(), isDefault: prev.length === 0 }]);
+      const isFirst = addresses.length === 0;
+      const { data, error } = await supabase.from('addresses').insert({
+        user_id: userId,
+        ...addressForm,
+        is_default: isFirst,
+      }).select().single();
+      if (!error && data) setAddresses(prev => [...prev, data]);
     } else {
-      setAddresses(prev => prev.map(a => a.id === editingAddress ? { ...a, ...addressForm } : a));
+      const { data, error } = await supabase.from('addresses').update(addressForm).eq('id', editingAddress).select().single();
+      if (!error && data) setAddresses(prev => prev.map(a => a.id === editingAddress ? data : a));
     }
     setEditingAddress(null);
   };
 
-  const deleteAddress = (id) => {
+  const deleteAddress = async (id) => {
+    await supabase.from('addresses').delete().eq('id', id);
     setAddresses(prev => {
       const filtered = prev.filter(a => a.id !== id);
-      if (filtered.length > 0 && !filtered.some(a => a.isDefault)) {
-        filtered[0].isDefault = true;
+      if (filtered.length > 0 && !filtered.some(a => a.is_default)) {
+        filtered[0].is_default = true;
+        supabase.from('addresses').update({ is_default: true }).eq('id', filtered[0].id);
       }
       return filtered;
     });
   };
 
-  const setDefaultAddress = (id) => {
-    setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === id })));
+  const setDefaultAddress = async (id) => {
+    const userId = user.id;
+    await supabase.from('addresses').update({ is_default: false }).eq('user_id', userId);
+    await supabase.from('addresses').update({ is_default: true }).eq('id', id);
+    setAddresses(prev => prev.map(a => ({ ...a, is_default: a.id === id })));
   };
 
   return (
@@ -215,7 +242,7 @@ export default function Account() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-brand-black dark:text-brand-offwhite">{addr.label || 'Address'}</span>
-                        {addr.isDefault && <span className="text-[10px] font-mono font-bold bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-pill">DEFAULT</span>}
+                        {addr.is_default && <span className="text-[10px] font-mono font-bold bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-pill">DEFAULT</span>}
                       </div>
                       {addr.name && <p className="text-sm text-brand-black dark:text-brand-offwhite">{addr.name}</p>}
                       <p className="text-sm text-brand-gray">{addr.address}</p>
@@ -223,7 +250,7 @@ export default function Account() {
                       {addr.phone && <p className="text-sm text-brand-gray">{addr.phone}</p>}
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      {!addr.isDefault && (
+                      {!addr.is_default && (
                         <button onClick={() => setDefaultAddress(addr.id)} className="text-xs text-brand-gray hover:text-brand-orange transition-colors">Set Default</button>
                       )}
                       <button onClick={() => startEditAddress(addr)} className="text-xs text-brand-gray hover:text-brand-orange transition-colors">Edit</button>
@@ -239,7 +266,7 @@ export default function Account() {
           {activeTab === 'orders' && (
             <div className="space-y-4">
               <h2 className="font-heading text-2xl">ORDER HISTORY</h2>
-              {demoOrders.length === 0 ? (
+              {orders.length === 0 ? (
                 <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-8 text-center">
                   <p className="text-brand-gray mb-4">No orders yet.</p>
                   <Link to="/shop" className="inline-block bg-brand-orange hover:bg-brand-orange-hover text-white px-6 py-2.5 rounded-pill text-sm font-medium transition-colors">
@@ -247,25 +274,25 @@ export default function Account() {
                   </Link>
                 </div>
               ) : (
-                demoOrders.map(order => (
+                orders.map(order => (
                   <div key={order.id} className="bg-white dark:bg-[#1A1A1A] rounded-card p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">{order.id}</span>
-                        <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-pill ${statusColor[order.status]}`}>
-                          {order.status.toUpperCase()}
+                        <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">{order.order_number}</span>
+                        <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-pill ${statusColor[order.status] || ''}`}>
+                          {order.status?.toUpperCase()}
                         </span>
                       </div>
-                      <span className="text-sm text-brand-gray">{new Date(order.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span className="text-sm text-brand-gray">{new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-brand-gray-light dark:border-[#2A2A2A]">
-                      <span className="text-sm text-brand-gray">{order.items} item{order.items > 1 ? 's' : ''}</span>
-                      <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">₹{order.total.toFixed(2)}</span>
+                      <span className="text-sm text-brand-gray">{order.item_count} item{order.item_count > 1 ? 's' : ''}</span>
+                      <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">₹{order.total?.toFixed(2)}</span>
                     </div>
                   </div>
                 ))
               )}
-              <p className="text-xs text-brand-gray text-center mt-2">Showing demo orders. Real order tracking will be available when payments are integrated.</p>
+              {orders.length === 0 && <p className="text-xs text-brand-gray text-center mt-2">Your orders will appear here once you make a purchase.</p>}
             </div>
           )}
 

@@ -1,7 +1,9 @@
 /* TEAM 4 — Checkout: Multi-step form with promo code, order summary, confirmation */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth, useUser, SignInButton, SignUpButton } from '@clerk/react';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../utils/supabase';
 
 const InputField = ({ label, field, type = 'text', placeholder, form, errors, update }) => (
   <div>
@@ -23,12 +25,15 @@ const steps = ['Details', 'Shipping', 'Payment'];
 
 export default function Checkout() {
   const { items, subtotal, discount, total, promoCode, applyPromo, removePromo, clearCart, itemCount } = useCart();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [promoInput, setPromoInput] = useState('');
   const [promoMsg, setPromoMsg] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
   const [errors, setErrors] = useState({});
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -39,6 +44,86 @@ export default function Checkout() {
   const update = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
+  // Pre-fill form with user data from Clerk/Supabase
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!isSignedIn || !user) return;
+      
+      // Pre-fill name and email from Clerk
+      setForm(prev => ({
+        ...prev,
+        name: prev.name || user.fullName || '',
+        email: prev.email || user.primaryEmailAddress?.emailAddress || '',
+      }));
+
+      // Load saved address from Supabase
+      try {
+        const { data: addresses } = await supabase
+          .from('addresses')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_default', true)
+          .limit(1);
+
+        if (addresses && addresses.length > 0) {
+          const addr = addresses[0];
+          setForm(prev => ({
+            ...prev,
+            phone: prev.phone || addr.phone || '',
+            address: prev.address || addr.street || '',
+            city: prev.city || addr.city || '',
+            country: prev.country || addr.country || '',
+            postal: prev.postal || addr.postal || '',
+          }));
+        }
+      } catch (e) {
+        console.error('Failed to load saved address:', e);
+      }
+    };
+
+    loadUserData();
+  }, [isSignedIn, user]);
+
+  // Save user info to Supabase after they complete shipping step
+  const saveUserAddress = async () => {
+    if (!isSignedIn || !user) return;
+    
+    try {
+      // Check if address already exists
+      const { data: existing } = await supabase
+        .from('addresses')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('street', form.address)
+        .eq('city', form.city)
+        .eq('postal', form.postal)
+        .limit(1);
+
+      if (existing && existing.length > 0) return; // Already saved
+
+      // Save new address
+      await supabase.from('addresses').insert({
+        user_id: user.id,
+        name: form.name,
+        phone: form.phone,
+        street: form.address,
+        city: form.city,
+        country: form.country,
+        postal: form.postal,
+        is_default: true,
+      });
+
+      // Set other addresses as non-default
+      await supabase
+        .from('addresses')
+        .update({ is_default: false })
+        .eq('user_id', user.id)
+        .neq('street', form.address);
+    } catch (e) {
+      console.error('Failed to save address:', e);
+    }
   };
 
   const validateStep = () => {
@@ -65,13 +150,61 @@ export default function Checkout() {
 
   const handleNext = () => {
     if (!validateStep()) return;
+    
+    // Require login before proceeding to payment (after shipping step)
+    if (step === 1 && !isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    // Save address when moving from shipping to payment
+    if (step === 1 && isSignedIn) {
+      saveUserAddress();
+    }
+    
     if (step < 2) setStep(step + 1);
     else handleSubmit();
   };
 
-  const handleSubmit = () => {
-    const num = 'TD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const handleSubmit = async () => {
+    const num = 'NR-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     setOrderNumber(num);
+
+    // Send order confirmation email
+    try {
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: form.email,
+          subject: `Order Confirmed — ${num}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="font-size: 24px;">Order Confirmed ✓</h1>
+              <p>Hi ${form.name},</p>
+              <p>Thanks for shopping with <strong>Nøiré</strong>. Your order <strong>${num}</strong> has been confirmed.</p>
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; color: #666;">Items</td>
+                  <td style="padding: 8px 0; text-align: right;">${items.length} item${items.length > 1 ? 's' : ''}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px 0; color: #666;">Total</td>
+                  <td style="padding: 8px 0; text-align: right; font-weight: bold;">₹${total.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Shipping to</td>
+                  <td style="padding: 8px 0; text-align: right;">${form.address}, ${form.city} ${form.postal}</td>
+                </tr>
+              </table>
+              <p style="color: #666; font-size: 14px;">We'll send you a tracking number once your order ships.</p>
+              <p style="margin-top: 24px;">— Nøiré Team</p>
+            </div>
+          `,
+        },
+      });
+    } catch (e) {
+      console.error('Email send failed:', e);
+    }
+
     clearCart();
   };
 
@@ -119,6 +252,67 @@ export default function Checkout() {
   }
 
   return (
+    <>
+      {/* Auth Required Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAuthModal(false)}
+          />
+          <div className="relative bg-brand-offwhite dark:bg-brand-black rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+
+              <h2 className="text-2xl font-bold text-brand-black dark:text-brand-offwhite mb-2">
+                Sign In to Continue
+              </h2>
+              <p className="text-brand-gray mb-6">
+                Please sign in or create an account to complete your purchase. We'll save your details for faster checkout next time.
+              </p>
+
+              <div className="space-y-3">
+                <SignInButton mode="modal">
+                  <button 
+                    onClick={() => setShowAuthModal(false)}
+                    className="w-full py-3 px-4 bg-brand-orange hover:bg-brand-orange-hover text-white font-medium rounded-pill transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+                
+                <SignUpButton mode="modal">
+                  <button 
+                    onClick={() => setShowAuthModal(false)}
+                    className="w-full py-3 px-4 border-2 border-brand-black dark:border-brand-offwhite text-brand-black dark:text-brand-offwhite font-medium rounded-pill hover:bg-brand-black hover:text-brand-offwhite dark:hover:bg-brand-offwhite dark:hover:text-brand-black transition-colors"
+                  >
+                    Create Account
+                  </button>
+                </SignUpButton>
+              </div>
+
+              <p className="mt-6 text-xs text-brand-gray">
+                Your cart and details will be saved.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <Link to="/shop" className="text-sm text-brand-gray hover:text-brand-orange transition-colors mb-6 inline-block">← Continue Shopping</Link>
       <h1 className="font-heading text-4xl sm:text-5xl mb-8">CHECKOUT</h1>
@@ -263,5 +457,6 @@ export default function Checkout() {
         </div>
       </div>
     </main>
+    </>
   );
 }

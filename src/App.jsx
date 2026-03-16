@@ -11,6 +11,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import CookieConsent from './components/CookieConsent';
+import AuthPromptModal from './components/AuthPromptModal';
 
 // Pages
 import Home from './pages/Home';
@@ -71,6 +72,7 @@ export default function App() {
             </div>
             <Footer />
             <CookieConsent />
+            <AuthPromptModal />
           </div>
         </WishlistProvider>
       </CartProvider>

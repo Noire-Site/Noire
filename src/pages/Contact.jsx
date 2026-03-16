@@ -1,6 +1,7 @@
 /* TEAM 5 — Contact Page: Form with validation, social links, FAQ accordion */
 import { useState } from 'react';
 import { useInView } from '../hooks/useInView';
+import { supabase } from '../utils/supabase';
 
 function FadeIn({ children, className = '' }) {
   const [ref, inView] = useInView();
@@ -25,7 +26,7 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!form.name.trim()) errs.name = 'Name is required';
@@ -33,9 +34,45 @@ export default function Contact() {
     if (!form.subject.trim()) errs.subject = 'Subject is required';
     if (!form.message.trim()) errs.message = 'Message is required';
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      setSubmitted(true);
+    if (Object.keys(errs).length > 0) return;
+
+    // Send contact form to your inbox
+    try {
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'agamjot@noire.co.in',
+          subject: `Contact Form: ${form.subject}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px;">
+              <h2 style="font-size: 20px;">New Contact Message</h2>
+              <p><strong>From:</strong> ${form.name} (${form.email})</p>
+              <p><strong>Subject:</strong> ${form.subject}</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+              <p style="white-space: pre-wrap;">${form.message}</p>
+            </div>
+          `,
+        },
+      });
+
+      // Auto-reply to the customer
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: form.email,
+          subject: 'We got your message — Nøiré',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px;">
+              <h2 style="font-size: 20px;">Thanks for reaching out, ${form.name}!</h2>
+              <p>We've received your message and will get back to you within 24 hours.</p>
+              <p style="color: #666; margin-top: 24px;">— Nøiré Team</p>
+            </div>
+          `,
+        },
+      });
+    } catch (e) {
+      console.error('Email send failed:', e);
     }
+
+    setSubmitted(true);
   };
 
   return (

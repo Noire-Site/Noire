@@ -17,7 +17,7 @@ export default function SizeGuide() {
       <FadeIn>
         <span className="font-mono text-xs uppercase tracking-widest text-brand-orange">Fit Reference</span>
         <h1 className="font-heading text-5xl sm:text-6xl mt-2 mb-4">SIZE GUIDE</h1>
-        <p className="text-brand-gray mb-8">All measurements are in inches. For the best fit, measure yourself and compare to the chart below.</p>
+        <p className="text-brand-gray mb-8">All measurements are of the actual garment in inches and centimetres. For the best fit, measure your body and compare to the chart below. Nøiré pieces are designed with an oversized streetwear fit.</p>
       </FadeIn>
 
       <FadeIn>
@@ -28,8 +28,9 @@ export default function SizeGuide() {
                 <tr className="border-b border-brand-gray-light dark:border-[#2A2A2A] bg-brand-gray-lighter dark:bg-[#2A2A2A]">
                   <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Size</th>
                   <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Chest</th>
-                  <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Waist</th>
-                  <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Hip</th>
+                  <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Shoulder</th>
+                  <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Length</th>
+                  <th className="text-left py-4 px-6 font-mono font-bold text-xs uppercase tracking-wider">Sleeve</th>
                 </tr>
               </thead>
               <tbody>
@@ -37,8 +38,9 @@ export default function SizeGuide() {
                   <tr key={row.size} className={`${i < sizeData.length - 1 ? 'border-b border-brand-gray-light/50 dark:border-[#2A2A2A]/50' : ''}`}>
                     <td className="py-4 px-6 font-mono font-bold">{row.size}</td>
                     <td className="py-4 px-6 text-brand-gray">{row.chest}</td>
-                    <td className="py-4 px-6 text-brand-gray">{row.waist}</td>
-                    <td className="py-4 px-6 text-brand-gray">{row.hip}</td>
+                    <td className="py-4 px-6 text-brand-gray">{row.shoulder}</td>
+                    <td className="py-4 px-6 text-brand-gray">{row.length}</td>
+                    <td className="py-4 px-6 text-brand-gray">{row.sleeve}</td>
                   </tr>
                 ))}
               </tbody>
@@ -51,17 +53,22 @@ export default function SizeGuide() {
         <div className="mt-8 bg-brand-orange/10 dark:bg-brand-orange/5 rounded-card p-6">
           <h3 className="font-heading text-xl mb-2">HOW TO MEASURE</h3>
           <ul className="space-y-2 text-sm text-brand-gray">
-            <li><strong className="text-brand-black dark:text-brand-offwhite">Chest:</strong> Measure around the fullest part of your chest, keeping the tape level.</li>
-            <li><strong className="text-brand-black dark:text-brand-offwhite">Waist:</strong> Measure around your natural waistline, keeping the tape comfortably loose.</li>
-            <li><strong className="text-brand-black dark:text-brand-offwhite">Hip:</strong> Measure around the fullest part of your hips.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Chest:</strong> Measure around the fullest part of your chest, keeping the tape flat and level.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Shoulder:</strong> Measure from the edge of one shoulder seam to the other across the back.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Length:</strong> Measure from the highest point of the shoulder down to the bottom hem.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Sleeve:</strong> Measure from the shoulder seam down to the end of the cuff.</li>
           </ul>
         </div>
       </FadeIn>
 
       <FadeIn>
         <div className="mt-8 p-4 bg-brand-gray-lighter dark:bg-[#2A2A2A] rounded-card">
-          <p className="text-xs text-brand-gray"><strong className="text-brand-black dark:text-brand-offwhite">Pro tip:</strong> If you're between sizes, we recommend sizing up for an oversized fit or sizing down for a snugger look. Most of our pieces are designed with a relaxed fit in mind.</p>
+          <p className="text-xs text-brand-gray"><strong className="text-brand-black dark:text-brand-offwhite">Pro tip:</strong> Nøiré fits are designed oversized. If you prefer a relaxed street fit, go true to size. For an extra dropped-shoulder look, size up one. Still unsure? DM us on Instagram — we'll help you pick.</p>
         </div>
+      </FadeIn>
+
+      <FadeIn>
+        <p className="mt-6 text-xs text-brand-gray italic">Measurements may vary by ±1 inch depending on the garment style. Always refer to the product-specific size note on each product page where available.</p>
       </FadeIn>
     </main>
   );

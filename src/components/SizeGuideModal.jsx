@@ -2,12 +2,12 @@
 import { useEffect } from 'react';
 
 const sizeData = [
-  { size: 'XS', chest: '32-34"', waist: '26-28"', hip: '34-36"' },
-  { size: 'S',  chest: '34-36"', waist: '28-30"', hip: '36-38"' },
-  { size: 'M',  chest: '38-40"', waist: '32-34"', hip: '40-42"' },
-  { size: 'L',  chest: '42-44"', waist: '36-38"', hip: '44-46"' },
-  { size: 'XL', chest: '46-48"', waist: '40-42"', hip: '48-50"' },
-  { size: 'XXL', chest: '50-52"', waist: '44-46"', hip: '52-54"' },
+  { size: 'XS', chest: '34–36" / 86–91cm', shoulder: '16" / 41cm', length: '26" / 66cm', sleeve: '24" / 61cm' },
+  { size: 'S',  chest: '36–38" / 91–97cm', shoulder: '17" / 43cm', length: '27" / 69cm', sleeve: '25" / 64cm' },
+  { size: 'M',  chest: '38–40" / 97–102cm', shoulder: '18" / 46cm', length: '28" / 71cm', sleeve: '26" / 66cm' },
+  { size: 'L',  chest: '40–42" / 102–107cm', shoulder: '19" / 48cm', length: '29" / 74cm', sleeve: '27" / 69cm' },
+  { size: 'XL', chest: '42–44" / 107–112cm', shoulder: '20" / 51cm', length: '30" / 76cm', sleeve: '28" / 71cm' },
+  { size: 'XXL', chest: '44–46" / 112–117cm', shoulder: '21" / 53cm', length: '31" / 79cm', sleeve: '29" / 74cm' },
 ];
 
 export default function SizeGuideModal({ isOpen, onClose }) {
@@ -47,7 +47,7 @@ export default function SizeGuideModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        <p className="text-sm text-brand-gray mb-4">All measurements are in inches. For the best fit, measure yourself and compare to the chart below.</p>
+        <p className="text-sm text-brand-gray mb-4">All measurements are of the actual garment in inches and centimetres. For the best fit, measure your body and compare to the chart below. Nøiré pieces are designed with an oversized streetwear fit.</p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm" role="table">
@@ -55,8 +55,9 @@ export default function SizeGuideModal({ isOpen, onClose }) {
               <tr className="border-b border-brand-gray-light dark:border-[#2A2A2A]">
                 <th className="text-left py-3 pr-4 font-mono font-bold text-xs uppercase tracking-wider">Size</th>
                 <th className="text-left py-3 pr-4 font-mono font-bold text-xs uppercase tracking-wider">Chest</th>
-                <th className="text-left py-3 pr-4 font-mono font-bold text-xs uppercase tracking-wider">Waist</th>
-                <th className="text-left py-3 font-mono font-bold text-xs uppercase tracking-wider">Hip</th>
+                <th className="text-left py-3 pr-4 font-mono font-bold text-xs uppercase tracking-wider">Shoulder</th>
+                <th className="text-left py-3 pr-4 font-mono font-bold text-xs uppercase tracking-wider">Length</th>
+                <th className="text-left py-3 font-mono font-bold text-xs uppercase tracking-wider">Sleeve</th>
               </tr>
             </thead>
             <tbody>
@@ -64,17 +65,30 @@ export default function SizeGuideModal({ isOpen, onClose }) {
                 <tr key={row.size} className="border-b border-brand-gray-light/50 dark:border-[#2A2A2A]/50">
                   <td className="py-3 pr-4 font-mono font-bold">{row.size}</td>
                   <td className="py-3 pr-4 text-brand-gray">{row.chest}</td>
-                  <td className="py-3 pr-4 text-brand-gray">{row.waist}</td>
-                  <td className="py-3 text-brand-gray">{row.hip}</td>
+                  <td className="py-3 pr-4 text-brand-gray">{row.shoulder}</td>
+                  <td className="py-3 pr-4 text-brand-gray">{row.length}</td>
+                  <td className="py-3 text-brand-gray">{row.sleeve}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="mt-6 p-4 bg-brand-gray-lighter dark:bg-[#2A2A2A] rounded-card">
-          <p className="text-xs text-brand-gray"><strong className="text-brand-black dark:text-brand-offwhite">Pro tip:</strong> If you're between sizes, we recommend sizing up for an oversized fit or sizing down for a snugger look.</p>
+        <div className="mt-6 bg-brand-orange/10 dark:bg-brand-orange/5 rounded-card p-4">
+          <h3 className="font-heading text-base mb-2">HOW TO MEASURE</h3>
+          <ul className="space-y-2 text-xs text-brand-gray">
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Chest:</strong> Measure around the fullest part of your chest, keeping the tape flat and level.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Shoulder:</strong> Measure from the edge of one shoulder seam to the other across the back.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Length:</strong> Measure from the highest point of the shoulder down to the bottom hem.</li>
+            <li><strong className="text-brand-black dark:text-brand-offwhite">Sleeve:</strong> Measure from the shoulder seam down to the end of the cuff.</li>
+          </ul>
         </div>
+
+        <div className="mt-4 p-4 bg-brand-gray-lighter dark:bg-[#2A2A2A] rounded-card">
+          <p className="text-xs text-brand-gray"><strong className="text-brand-black dark:text-brand-offwhite">Pro tip:</strong> Nøiré fits are designed oversized. If you prefer a relaxed street fit, go true to size. For an extra dropped-shoulder look, size up one. Still unsure? DM us on Instagram — we'll help you pick.</p>
+        </div>
+
+        <p className="text-xs text-brand-gray mt-4 italic">Measurements may vary by ±1 inch depending on the garment style. Always refer to the product-specific size note on each product page where available.</p>
       </div>
     </div>
   );
