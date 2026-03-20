@@ -62,6 +62,7 @@ export default function Home() {
           </div>
 
           {/* Right — Floating product card */}
+          {products[7] && (
           <div className="hidden lg:flex items-center justify-center relative">
             <div className="absolute w-80 h-80 bg-brand-orange/10 rounded-full blur-3xl" />
             <div className="relative animate-float">
@@ -75,6 +76,7 @@ export default function Home() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </section>
 
