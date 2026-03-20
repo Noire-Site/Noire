@@ -1,13 +1,14 @@
 /* TEAM 2/3 — Product Detail Page: Gallery, size/color pickers, add to cart, related products */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import products from '../data/products.json';
+import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 
 export default function ProductDetail() {
+  const { products } = useProducts();
   const { slug } = useParams();
   const product = products.find(p => p.slug === slug);
   const { addItem } = useCart();
@@ -18,6 +19,13 @@ export default function ProductDetail() {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
+  const [sizeAlert, setSizeAlert] = useState(false);
+
+  useEffect(() => {
+    if (!sizeAlert) return;
+    const t = setTimeout(() => setSizeAlert(false), 3000);
+    return () => clearTimeout(t);
+  }, [sizeAlert]);
 
   const related = useMemo(() => {
     if (!product) return [];
@@ -39,7 +47,7 @@ export default function ProductDetail() {
   const lowStock = product.stock < 5;
 
   const handleAdd = () => {
-    if (!selectedSize) return alert('Please select a size');
+    if (!selectedSize) { setSizeAlert(true); return; }
     const color = selectedColor || product.colors[0].name;
     addItem(product, selectedSize, color);
     setAdded(true);
@@ -226,6 +234,20 @@ export default function ProductDetail() {
       )}
 
       <SizeGuideModal isOpen={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
+
+      {/* Size toast */}
+      <div
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-brand-black dark:bg-[#1A1A1A] border border-brand-orange text-white text-sm font-medium shadow-lg pointer-events-none transition-all duration-300"
+        style={{
+          opacity: sizeAlert ? 1 : 0,
+          transform: sizeAlert ? 'translateY(0)' : 'translateY(8px)',
+        }}
+        role="status"
+        aria-live="polite"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-brand-orange shrink-0" />
+        Please select a size
+      </div>
     </main>
   );
 }

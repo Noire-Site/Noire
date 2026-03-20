@@ -1,10 +1,11 @@
 /* TEAM 3 — Wishlist Page: View and manage wishlisted products */
-import products from '../data/products.json';
+import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
 import { useWishlist } from '../contexts/WishlistContext';
 import { Link } from 'react-router-dom';
 
 export default function Wishlist() {
+  const { products } = useProducts();
   const { wishlist } = useWishlist();
   const wishlisted = products.filter(p => wishlist.includes(p.id));
 

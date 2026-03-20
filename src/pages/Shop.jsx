@@ -1,13 +1,12 @@
 /* TEAM 2/3 — Shop Page: Filterable, sortable product catalog */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import products from '../data/products.json';
+import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
 import { ProductGridSkeleton } from '../components/Skeleton';
 
-const allCategories = ['Men', 'Women', 'Unisex', 'Accessories'];
+const allCategories = ['Men', 'Women', 'Unisex'];
 const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
-const allColors = [...new Map(products.flatMap(p => p.colors).map(c => [c.hex, c])).values()];
 const sortOptions = [
   { value: 'newest', label: 'Newest' },
   { value: 'price-asc', label: 'Price: Low → High' },
@@ -15,8 +14,8 @@ const sortOptions = [
 ];
 
 export default function Shop() {
+  const { products, loading: productsLoading } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
   const [mobileFilters, setMobileFilters] = useState(false);
 
   // Filters from URL
@@ -28,11 +27,10 @@ export default function Shop() {
   const [priceRange, setPriceRange] = useState([0, 15000]);
   const [sort, setSort] = useState('newest');
 
-  useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(t);
-  }, [activeCategory, activeTag, searchQuery]);
+  const allColors = useMemo(
+    () => [...new Map(products.flatMap(p => p.colors).map(c => [c.hex, c])).values()],
+    [products]
+  );
 
   const filtered = useMemo(() => {
     let result = [...products];
@@ -57,7 +55,7 @@ export default function Shop() {
     }
 
     return result;
-  }, [activeCategory, activeTag, searchQuery, selectedSizes, selectedColors, priceRange, sort]);
+  }, [products, activeCategory, activeTag, searchQuery, selectedSizes, selectedColors, priceRange, sort]);
 
   const setCategory = (cat) => {
     const params = new URLSearchParams(searchParams);
@@ -219,7 +217,7 @@ export default function Shop() {
 
         {/* Product Grid */}
         <div className="flex-1">
-          {loading ? (
+          {productsLoading ? (
             <ProductGridSkeleton count={8} />
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">

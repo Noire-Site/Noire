@@ -42,7 +42,7 @@ export default function Returns() {
             <ol className="space-y-3 text-sm text-brand-gray leading-relaxed">
               <li className="flex gap-3">
                 <span className="font-mono font-bold text-brand-orange shrink-0">01</span>
-                <span>Email us at <span className="text-brand-orange">returns@nøiré.com</span> with your order number and reason for return.</span>
+                <span>Email us at <span className="text-brand-orange">support@noire.co.in</span> with your order number and reason for return.</span>
               </li>
               <li className="flex gap-3">
                 <span className="font-mono font-bold text-brand-orange shrink-0">02</span>
@@ -61,7 +61,7 @@ export default function Returns() {
             <h2 className="font-heading text-2xl mb-3">EXCHANGES</h2>
             <div className="space-y-3 text-sm text-brand-gray leading-relaxed">
               <p>Need a different size or color? We've got you.</p>
-              <p>Email us at <span className="text-brand-orange">exchanges@nøiré.com</span> and we'll sort it out. Exchanges are subject to availability — our drops are limited, so act fast.</p>
+              <p>Email us at <span className="text-brand-orange">support@noire.co.in</span> and we'll sort it out. Exchanges are subject to availability — our drops are limited, so act fast.</p>
             </div>
           </div>
         </FadeIn>

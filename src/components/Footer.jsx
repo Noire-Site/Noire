@@ -37,7 +37,6 @@ export default function Footer() {
               <li><Link to="/shop?category=Men" className="text-sm text-gray-400 hover:text-brand-orange transition-colors">Men</Link></li>
               <li><Link to="/shop?category=Women" className="text-sm text-gray-400 hover:text-brand-orange transition-colors">Women</Link></li>
               <li><Link to="/shop?category=Unisex" className="text-sm text-gray-400 hover:text-brand-orange transition-colors">Unisex</Link></li>
-              <li><Link to="/shop?category=Accessories" className="text-sm text-gray-400 hover:text-brand-orange transition-colors">Accessories</Link></li>
               <li><Link to="/shop?tag=Sale" className="text-sm text-gray-400 hover:text-brand-orange transition-colors">Sale</Link></li>
             </ul>
           </div>
@@ -78,9 +77,9 @@ export default function Footer() {
         <div className="border-t border-[#2A2A2A] mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">© 2025 Nøiré. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Privacy</a>
-            <a href="#" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Terms</a>
-            <a href="#" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Cookies</a>
+            <Link to="/privacy" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Terms</Link>
+            <Link to="/cookies" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Cookies</Link>
           </div>
         </div>
       </div>

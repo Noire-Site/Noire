@@ -1,7 +1,7 @@
 /* TEAM 2/3/5 — Homepage: Hero, marquee, featured products, categories, lifestyle grid, newsletter */
-import { useState, useEffect } from 'react';
+
 import { Link } from 'react-router-dom';
-import products from '../data/products.json';
+import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
 import { ProductGridSkeleton } from '../components/Skeleton';
 import { useInView } from '../hooks/useInView';
@@ -17,14 +17,9 @@ function FadeIn({ children, className = '' }) {
 }
 
 export default function Home() {
-  const [loading, setLoading] = useState(true);
+  const { products, loading } = useProducts();
   const featured = products.slice(0, 8);
-  const categories = ['Men', 'Women', 'Unisex', 'Accessories'];
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(t);
-  }, []);
+  const categories = ['Men', 'Women', 'Unisex'];
 
   return (
     <main>

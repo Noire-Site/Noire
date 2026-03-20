@@ -1,9 +1,10 @@
 /* TEAM 3 — SearchBar: Live product search with dropdown suggestions */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import products from '../data/products.json';
+import { useProducts } from '../contexts/ProductsContext';
 
 export default function SearchBar({ onClose }) {
+  const { products } = useProducts();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const inputRef = useRef(null);

@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
+import { ProductsProvider } from './contexts/ProductsContext';
 import ScrollToTop from './utils/ScrollToTop';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -25,6 +26,9 @@ import SizeGuide from './pages/SizeGuide';
 import Wishlist from './pages/Wishlist';
 import NotFound from './pages/NotFound';
 import Account from './pages/Account';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Cookies from './pages/Cookies';
 
 export default function App() {
   const location = useLocation();
@@ -42,6 +46,9 @@ export default function App() {
     else if (pathname === '/size-guide') pageName = 'Size Guide';
     else if (pathname === '/wishlist') pageName = 'Wishlist';
     else if (pathname === '/account') pageName = 'Account';
+    else if (pathname === '/privacy') pageName = 'Privacy Policy';
+    else if (pathname === '/terms') pageName = 'Terms & Conditions';
+    else if (pathname === '/cookies') pageName = 'Cookie Policy';
     else if (pathname !== '/') pageName = '404';
 
     document.title = `Nøiré — ${pageName}`;
@@ -49,6 +56,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+      <ProductsProvider>
       <CartProvider>
         <WishlistProvider>
           <ScrollToTop />
@@ -67,6 +75,9 @@ export default function App() {
                 <Route path="/size-guide" element={<SizeGuide />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/account" element={<Account />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/cookies" element={<Cookies />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
@@ -76,6 +87,7 @@ export default function App() {
           </div>
         </WishlistProvider>
       </CartProvider>
+      </ProductsProvider>
     </ThemeProvider>
   );
 }

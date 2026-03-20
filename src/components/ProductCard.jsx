@@ -44,7 +44,7 @@ export default function ProductCard({ product }) {
             <span className={`absolute top-3 left-3 z-10 text-[10px] font-mono font-bold px-2.5 py-1 rounded-pill uppercase tracking-wider ${
               badge === 'New Drop' ? 'bg-brand-orange text-white' :
               badge === 'Sale' ? 'bg-brand-black dark:bg-brand-offwhite text-white dark:text-brand-black' :
-              'border border-brand-orange text-brand-orange'
+              'border border-brand-orange text-brand-orange bg-white/80 dark:bg-brand-black/80'
             }`}>
               {badge}
             </span>

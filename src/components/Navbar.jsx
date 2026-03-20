@@ -20,13 +20,12 @@ export default function Navbar() {
     { to: '/shop?category=Men', label: 'Men' },
     { to: '/shop?category=Women', label: 'Women' },
     { to: '/shop?category=Unisex', label: 'Unisex' },
-    { to: '/shop?category=Accessories', label: 'Accessories' },
     { to: '/about', label: 'About' },
   ];
 
   return (
     <header className="sticky top-0 z-40 bg-brand-offwhite/90 dark:bg-brand-black/90 backdrop-blur-md border-b border-brand-gray-light dark:border-[#2A2A2A] transition-colors duration-300">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 relative">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-0 shrink-0 overflow-visible leading-[1.2]" aria-label="Nøiré home">
           <span style={{ fontFamily: "'Big Shoulders Display', 'Bebas Neue', 'Arial Unicode MS', sans-serif" }} className="text-2xl sm:text-3xl tracking-wide">
@@ -35,8 +34,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Nav Links */}
-        <div className="hidden lg:flex items-center gap-8">
+        {/* Desktop Nav Links — centered absolutely */}
+        <div className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
           {navLinks.map(link => (
             <Link
               key={link.to}
@@ -51,19 +50,20 @@ export default function Navbar() {
         {/* Right Actions */}
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Auth */}
-          <Show when="signed-out">
-            <SignInButton mode="modal">
-              <button className="text-sm font-medium text-brand-gray hover:text-brand-orange transition-colors px-2 py-1">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="text-sm font-medium bg-brand-orange hover:bg-brand-orange-hover text-white px-3 py-1.5 rounded-pill transition-colors">
-                Sign Up
-              </button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
+          <Show fallback={
+            <>
+              <SignInButton mode="modal">
+                <button className="text-sm font-medium text-brand-gray hover:text-brand-orange transition-colors px-2 py-1">
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="text-sm font-medium bg-brand-orange hover:bg-brand-orange-hover text-white px-3 py-1.5 rounded-pill transition-colors">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </>
+          }>
             <Link
               to="/account"
               className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
