@@ -12,6 +12,9 @@ dist/
 # Vercel
 .vercel
 
+# Git worktrees
+.worktrees/
+
 # macOS
 .DS_Store
 
