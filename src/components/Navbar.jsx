@@ -1,13 +1,14 @@
 /* TEAM 2 — Navbar: Sticky nav with logo, search, wishlist, cart, dark mode toggle */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/react';
+import { useAuth, SignInButton, SignUpButton } from '@clerk/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import SearchBar from './SearchBar';
 
 export default function Navbar() {
+  const { isSignedIn } = useAuth();
   const { dark, toggle } = useTheme();
   const { itemCount, setIsOpen } = useCart();
   const { wishlist } = useWishlist();
@@ -50,19 +51,7 @@ export default function Navbar() {
         {/* Right Actions */}
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Auth */}
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="text-sm font-medium text-brand-gray hover:text-brand-orange transition-colors px-2 py-1">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="text-sm font-medium bg-brand-orange hover:bg-brand-orange-hover text-white px-3 py-1.5 rounded-pill transition-colors">
-                Sign Up
-              </button>
-            </SignUpButton>
-          </SignedOut>
-          <SignedIn>
+          {isSignedIn ? (
             <Link
               to="/account"
               className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
@@ -72,7 +61,20 @@ export default function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </Link>
-          </SignedIn>
+          ) : (
+            <>
+              <SignInButton mode="modal">
+                <button className="text-sm font-medium text-brand-gray hover:text-brand-orange transition-colors px-2 py-1">
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="text-sm font-medium bg-brand-orange hover:bg-brand-orange-hover text-white px-3 py-1.5 rounded-pill transition-colors">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </>
+          )}
 
           {/* Search Toggle */}
           <button
