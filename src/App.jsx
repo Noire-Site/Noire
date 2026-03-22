@@ -14,6 +14,13 @@ import CartDrawer from './components/CartDrawer';
 import CookieConsent from './components/CookieConsent';
 import AuthPromptModal from './components/AuthPromptModal';
 
+// Admin
+import AdminLayout from './components/admin/AdminLayout';
+import AdminGuard from './components/admin/AdminGuard';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ProductForm from './pages/admin/ProductForm';
+
 // Pages
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -37,6 +44,7 @@ export default function App() {
     const { pathname } = location;
     let pageName = 'Home';
 
+    if (pathname.startsWith('/admin')) { document.title = 'Nøiré — Admin'; return; }
     if (pathname === '/shop') pageName = 'Shop';
     else if (pathname.startsWith('/product/')) pageName = 'Product';
     else if (pathname === '/checkout') pageName = 'Checkout';
@@ -53,6 +61,19 @@ export default function App() {
 
     document.title = `Nøiré — ${pageName}`;
   }, [location]);
+
+  // Admin routes — no site chrome
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  if (isAdminRoute) {
+    return (
+      <Routes>
+        <Route path="/admin/login" element={<AdminLayout><AdminLogin /></AdminLayout>} />
+        <Route path="/admin" element={<AdminLayout><AdminGuard><AdminDashboard /></AdminGuard></AdminLayout>} />
+        <Route path="/admin/products/new" element={<AdminLayout><AdminGuard><ProductForm /></AdminGuard></AdminLayout>} />
+        <Route path="/admin/products/:id" element={<AdminLayout><AdminGuard><ProductForm /></AdminGuard></AdminLayout>} />
+      </Routes>
+    );
+  }
 
   return (
     <ThemeProvider>
