@@ -55,6 +55,7 @@ export default function OrderDetail() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => { fetchOrder(); }, [id]);
 
@@ -75,9 +76,16 @@ export default function OrderDetail() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError('');
     const { error } = await supabase.from('orders').delete().eq('id', id);
-    if (!error) navigate('/admin/orders');
-    else setDeleting(false);
+    if (!error) {
+      navigate('/admin/orders');
+    } else {
+      console.error('Delete error:', error);
+      setDeleteError(error.message || error.code || 'Delete failed');
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
   };
 
   // Field helpers — support both old and new schema
@@ -129,7 +137,10 @@ export default function OrderDetail() {
               {' · '}{order.customer_email}
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {deleteError && (
+              <span style={{ ...MONO, fontSize: '11px', color: '#F87171' }}>{deleteError}</span>
+            )}
             <StatusBadge status={currentStatus} />
             {!confirmDelete ? (
               <button
