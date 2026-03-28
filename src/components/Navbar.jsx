@@ -1,5 +1,5 @@
 /* TEAM 2 — Navbar: Sticky nav with logo, search, wishlist, cart, dark mode toggle */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, SignInButton, SignUpButton } from '@clerk/react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -16,6 +16,18 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Cmd+K / Ctrl+K to open search
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const navLinks = [
     { to: '/shop', label: 'Shop' },
     { to: '/shop?category=Men', label: 'Men' },
@@ -25,6 +37,7 @@ export default function Navbar() {
   ];
 
   return (
+    <>
     <header className="sticky top-0 z-40 bg-brand-offwhite/90 dark:bg-brand-black/90 backdrop-blur-md border-b border-brand-gray-light dark:border-[#2A2A2A] transition-colors duration-300">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 relative">
         {/* Logo */}
@@ -78,7 +91,7 @@ export default function Navbar() {
 
           {/* Search Toggle */}
           <button
-            onClick={() => setSearchOpen(!searchOpen)}
+            onClick={() => setSearchOpen(true)}
             className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
             aria-label="Search products"
           >
@@ -155,13 +168,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Search Bar */}
-      {searchOpen && (
-        <div className="border-t border-brand-gray-light dark:border-[#2A2A2A] px-4 sm:px-6 lg:px-8 py-3 bg-brand-offwhite dark:bg-brand-black">
-          <SearchBar onClose={() => setSearchOpen(false)} />
-        </div>
-      )}
-
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-brand-gray-light dark:border-[#2A2A2A] bg-brand-offwhite dark:bg-brand-black px-4 py-4 space-y-3">
@@ -185,5 +191,9 @@ export default function Navbar() {
         </div>
       )}
     </header>
+
+    {/* Spotlight search modal — rendered outside header so it overlays everything */}
+    {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
+    </>
   );
 }

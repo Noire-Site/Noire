@@ -41,7 +41,7 @@ export function ProductsProvider({ children }) {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('id');
+        .order('created_at', { ascending: false });
 
       if (error) {
         setError(error.message);

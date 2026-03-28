@@ -12,12 +12,16 @@ const tabs = [
   { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
 ];
 
-const statusColor = {
-  'Delivered': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  'Shipped': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  'Processing': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  'Cancelled': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+const STATUS_STYLE = {
+  pending:    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  confirmed:  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  processing: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  shipped:    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  delivered:  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  cancelled:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
+
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '';
 
 export default function Account() {
   const { user, isLoaded } = useUser();
@@ -38,9 +42,12 @@ export default function Account() {
 
     async function fetchData() {
       setLoading(true);
-      const [addrRes, orderRes] = await Promise.all([
+      const email = user.primaryEmailAddress?.emailAddress;
+    const [addrRes, orderRes] = await Promise.all([
         supabase.from('addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }),
-        supabase.from('orders').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+        email
+          ? supabase.from('orders').select('*').eq('customer_email', email).order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] }),
       ]);
       if (addrRes.data) setAddresses(addrRes.data);
       if (orderRes.data) setOrders(orderRes.data);
@@ -266,7 +273,11 @@ export default function Account() {
           {activeTab === 'orders' && (
             <div className="space-y-4">
               <h2 className="font-heading text-2xl">ORDER HISTORY</h2>
-              {orders.length === 0 ? (
+              {loading ? (
+                <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-8 text-center">
+                  <div className="w-6 h-6 border-2 border-brand-orange border-t-transparent rounded-full animate-spin mx-auto" />
+                </div>
+              ) : orders.length === 0 ? (
                 <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-8 text-center">
                   <p className="text-brand-gray mb-4">No orders yet.</p>
                   <Link to="/shop" className="inline-block bg-brand-orange hover:bg-brand-orange-hover text-white px-6 py-2.5 rounded-pill text-sm font-medium transition-colors">
@@ -274,25 +285,93 @@ export default function Account() {
                   </Link>
                 </div>
               ) : (
-                orders.map(order => (
-                  <div key={order.id} className="bg-white dark:bg-[#1A1A1A] rounded-card p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">{order.order_number}</span>
-                        <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-pill ${statusColor[order.status] || ''}`}>
-                          {order.status?.toUpperCase()}
-                        </span>
+                orders.map(order => {
+                  const orderId = order.order_id || order.order_number || '—';
+                  const status = order.status || order.fulfillment_status || 'pending';
+                  const itemCount = (order.items ?? []).length;
+                  const total = order.total_amount ?? order.total ?? 0;
+                  const waMessage = `Hi, my Order ID is ${orderId}`;
+                  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+                  const needsConfirm = status === 'pending';
+
+                  return (
+                    <div key={order.id} className="bg-white dark:bg-[#1A1A1A] rounded-card p-6">
+                      {/* Header row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">{orderId}</span>
+                          <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-pill ${STATUS_STYLE[status] || 'bg-gray-100 text-gray-600'}`}>
+                            {status.toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-sm text-brand-gray">{new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                       </div>
-                      <span className="text-sm text-brand-gray">{new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+
+                      {/* Items preview */}
+                      {(order.items ?? []).length > 0 && (
+                        <div className="space-y-1 mb-4">
+                          {(order.items ?? []).map((item, i) => (
+                            <div key={i} className="flex justify-between text-sm">
+                              <span className="text-brand-gray">{item.name} <span className="text-xs">({item.size}/{item.color}) × {item.quantity}</span></span>
+                              <span className="font-mono text-brand-black dark:text-brand-offwhite">₹{((item.price ?? 0) * (item.quantity ?? 1)).toFixed(0)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Footer row */}
+                      <div className="flex items-center justify-between pt-3 border-t border-brand-gray-light dark:border-[#2A2A2A]">
+                        <span className="text-sm text-brand-gray">{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                        <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">₹{Number(total).toFixed(2)}</span>
+                      </div>
+
+                      {/* WhatsApp tracking for pending orders */}
+                      {needsConfirm && WHATSAPP_NUMBER && (
+                        <div className="mt-4 pt-4 border-t border-brand-gray-light dark:border-[#2A2A2A]">
+                          <p className="text-xs text-brand-gray mb-2">Send us your Order ID on WhatsApp to confirm this order:</p>
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm px-4 py-2 rounded-pill font-medium transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.553 4.103 1.522 5.828L0 24l6.336-1.5A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.869 9.869 0 01-5.031-1.378l-.361-.214-3.741.885.939-3.619-.235-.373A9.865 9.865 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106S21.894 6.58 21.894 12 17.42 21.894 12 21.894z"/>
+                            </svg>
+                            Confirm on WhatsApp
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Status tracker for non-pending orders */}
+                      {!needsConfirm && status !== 'cancelled' && (
+                        <div className="mt-4 pt-4 border-t border-brand-gray-light dark:border-[#2A2A2A]">
+                          <div className="flex items-center gap-1">
+                            {['confirmed', 'processing', 'shipped', 'delivered'].map((s, i, arr) => {
+                              const steps = ['confirmed', 'processing', 'shipped', 'delivered'];
+                              const currentIdx = steps.indexOf(status);
+                              const stepIdx = steps.indexOf(s);
+                              const done = stepIdx <= currentIdx;
+                              return (
+                                <div key={s} className="flex items-center flex-1">
+                                  <div className={`w-2 h-2 rounded-full shrink-0 ${done ? 'bg-brand-orange' : 'bg-brand-gray-light dark:bg-[#2A2A2A]'}`} />
+                                  {i < arr.length - 1 && <div className={`flex-1 h-px mx-1 ${done && stepIdx < currentIdx ? 'bg-brand-orange' : 'bg-brand-gray-light dark:bg-[#2A2A2A]'}`} />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            {['Confirmed', 'Processing', 'Shipped', 'Delivered'].map(s => (
+                              <span key={s} className="text-[9px] text-brand-gray font-mono uppercase">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-brand-gray-light dark:border-[#2A2A2A]">
-                      <span className="text-sm text-brand-gray">{order.item_count} item{order.item_count > 1 ? 's' : ''}</span>
-                      <span className="font-mono font-bold text-brand-black dark:text-brand-offwhite">₹{order.total?.toFixed(2)}</span>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
-              {orders.length === 0 && <p className="text-xs text-brand-gray text-center mt-2">Your orders will appear here once you make a purchase.</p>}
             </div>
           )}
 

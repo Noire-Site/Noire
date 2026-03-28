@@ -13,7 +13,7 @@ export default function ProductCard({ product }) {
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(product, product.sizes[0], product.colors[0].name);
+    addItem(product, product.sizes[0] ?? '', product.colors[0]?.name ?? '');
   };
 
   const handleWishlist = (e) => {

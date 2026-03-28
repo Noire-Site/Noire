@@ -1,6 +1,6 @@
 /* TEAM 2/3/5 — Homepage: Hero, marquee, featured products, categories, lifestyle grid, newsletter */
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
 import { ProductGridSkeleton } from '../components/Skeleton';
@@ -18,8 +18,13 @@ function FadeIn({ children, className = '' }) {
 
 export default function Home() {
   const { products, loading } = useProducts();
+  const navigate = useNavigate();
   const featured = products.slice(0, 8);
-  const categories = ['Men', 'Women', 'Unisex'];
+  const categories = [
+    { name: 'Men',    subs: ['Hoodies', 'T-Shirts', 'Jackets', 'Joggers'] },
+    { name: 'Women',  subs: ['Hoodies', 'T-Shirts', 'Jackets', 'Joggers'] },
+    { name: 'Unisex', subs: ['Hoodies', 'T-Shirts', 'Zip-Ups', 'Caps']   },
+  ];
 
   return (
     <main>
@@ -62,16 +67,16 @@ export default function Home() {
           </div>
 
           {/* Right — Floating product card */}
-          {products[7] && (
+          {products[0] && (
           <div className="hidden lg:flex items-center justify-center relative">
             <div className="absolute w-80 h-80 bg-brand-orange/10 rounded-full blur-3xl" />
             <div className="relative animate-float">
               <div className="w-72 bg-white dark:bg-[#1A1A1A] rounded-card shadow-xl overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <div className="aspect-[3/4]" style={{ background: products[7].images.primary }} />
+                <div className="aspect-[3/4]" style={{ background: products[0].images.primary }} />
                 <div className="p-4">
-                  <p className="text-xs text-brand-gray uppercase tracking-wider">{products[7].category}</p>
-                  <p className="font-medium mt-1">{products[7].name}</p>
-                  <p className="font-mono font-bold text-brand-orange mt-1">₹{products[7].price}</p>
+                  <p className="text-xs text-brand-gray uppercase tracking-wider">{products[0].category}</p>
+                  <p className="font-medium mt-1">{products[0].name}</p>
+                  <p className="font-mono font-bold text-brand-orange mt-1">₹{products[0].price}</p>
                 </div>
               </div>
             </div>
@@ -83,11 +88,10 @@ export default function Home() {
       {/* ===== STATS ROW ===== */}
       <FadeIn>
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="flex justify-center gap-16 sm:gap-24 text-center">
             {[
-              { value: '12K+', label: 'Happy Customers' },
-              { value: '2-4 Days', label: 'Fast Shipping' },
-              { value: 'SS26', label: 'Latest Season' },
+              { value: 'FAST SHIPPING', label: 'Free over ₹5000' },
+              { value: 'SS26',          label: 'Latest Season'   },
             ].map(stat => (
               <div key={stat.label} className="py-4">
                 <p className="font-heading text-3xl sm:text-4xl text-brand-orange">{stat.value}</p>
@@ -146,32 +150,51 @@ export default function Home() {
           <span className="font-mono text-xs uppercase tracking-widest text-brand-orange">Browse</span>
           <h2 className="font-heading text-4xl sm:text-5xl mt-1 mb-8">SHOP BY CATEGORY</h2>
         </FadeIn>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {categories.map((cat, i) => {
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {categories.map(({ name, subs }, i) => {
             const gradients = [
               'linear-gradient(135deg, #2D2D2D 0%, #FF4500 100%)',
               'linear-gradient(135deg, #191970 0%, #DE9E9E 100%)',
               'linear-gradient(135deg, #0D0D0D 0%, #5A5651 100%)',
-              'linear-gradient(135deg, #0D0D0D 0%, #FF4500 100%)',
             ];
             return (
-              <FadeIn key={cat}>
-                <Link
-                  to={`/shop?category=${cat}`}
-                  className="group relative aspect-[3/4] rounded-card overflow-hidden block"
+              <FadeIn key={name}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/shop?category=${name}`)}
+                  onKeyDown={e => e.key === 'Enter' && navigate(`/shop?category=${name}`)}
+                  className="group relative aspect-[3/4] rounded-card overflow-hidden cursor-pointer"
                 >
+                  {/* Background */}
                   <div
                     className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
                     style={{ background: gradients[i] }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                    <h3 className="font-heading text-2xl sm:text-3xl text-white">{cat.toUpperCase()}</h3>
-                    <p className="text-sm text-gray-300 mt-1 group-hover:text-brand-orange transition-colors">
-                      Shop {cat} →
-                    </p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                  {/* Default state — category name */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:-translate-y-2">
+                    <h3 className="font-heading text-2xl sm:text-3xl text-white">{name.toUpperCase()}</h3>
+                    <p className="text-sm text-gray-300 mt-1">Shop {name} →</p>
                   </div>
-                </Link>
+
+                  {/* Hover state — subcategory links */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 opacity-0 translate-y-3 transition-all duration-300 ease-in-out group-hover:opacity-100 group-hover:translate-y-0">
+                    <p className="font-mono text-xs uppercase tracking-widest text-brand-orange mb-3">{name}</p>
+                    {subs.map(sub => (
+                      <Link
+                        key={sub}
+                        to={`/shop?category=${name}&type=${sub.toLowerCase().replace(' ', '-')}`}
+                        onClick={e => e.stopPropagation()}
+                        className="block text-white hover:text-brand-orange text-sm font-medium py-1.5 border-b border-white/10 last:border-0 transition-colors duration-200"
+                      >
+                        {sub}
+                        <span className="ml-1 text-brand-orange/70">→</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </FadeIn>
             );
           })}
@@ -184,24 +207,52 @@ export default function Home() {
           <span className="font-mono text-xs uppercase tracking-widest text-brand-orange">@nøiré</span>
           <h2 className="font-heading text-4xl sm:text-5xl mt-1 mb-8">THE LOOK</h2>
         </FadeIn>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          {[
-            { bg: 'linear-gradient(135deg, #FF4500 0%, #0D0D0D 80%)', span: 'md:col-span-2 md:row-span-2' },
-            { bg: 'linear-gradient(135deg, #2D2D2D 0%, #C2B280 100%)', span: '' },
-            { bg: 'linear-gradient(135deg, #191970 0%, #B57EDC 100%)', span: '' },
-            { bg: 'linear-gradient(135deg, #556B2F 0%, #FFFDD0 100%)', span: '' },
-            { bg: 'linear-gradient(135deg, #9E9E9E 0%, #FF4500 100%)', span: '' },
-          ].map((item, i) => (
-            <FadeIn key={i} className={item.span}>
-              <div
-                className="aspect-square rounded-card overflow-hidden group cursor-pointer"
-                style={{ background: item.bg }}
-              >
-                <div className="w-full h-full group-hover:scale-105 transition-transform duration-500" />
-              </div>
-            </FadeIn>
-          ))}
-        </div>
+        {(() => {
+          const fallbacks = [
+            'linear-gradient(135deg, #FF4500 0%, #0D0D0D 80%)',
+            'linear-gradient(135deg, #2D2D2D 0%, #C2B280 100%)',
+            'linear-gradient(135deg, #191970 0%, #B57EDC 100%)',
+            'linear-gradient(135deg, #556B2F 0%, #FFFDD0 100%)',
+            'linear-gradient(135deg, #9E9E9E 0%, #FF4500 100%)',
+          ];
+          const spans = ['md:col-span-2 md:row-span-2', '', '', '', ''];
+          const tiles = Array.from({ length: 5 }, (_, i) => ({
+            product: products[i] ?? null,
+            bg: products[i]?.images.primary || fallbacks[i],
+            span: spans[i],
+          }));
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              {tiles.map((tile, i) => (
+                <FadeIn key={i} className={tile.span}>
+                  {tile.product ? (
+                    <Link
+                      to={`/product/${tile.product.slug}`}
+                      className="relative aspect-square rounded-card overflow-hidden group block"
+                    >
+                      <div
+                        className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                        style={{ background: tile.bg }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                        <p className="text-white text-xs font-medium truncate">{tile.product.name}</p>
+                        <p className="text-brand-orange font-mono text-xs font-bold">₹{tile.product.salePrice ?? tile.product.price}</p>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div
+                      className="aspect-square rounded-card overflow-hidden group cursor-default"
+                      style={{ background: tile.bg }}
+                    >
+                      <div className="w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                  )}
+                </FadeIn>
+              ))}
+            </div>
+          );
+        })()}
       </section>
 
       {/* ===== NEWSLETTER ===== */}

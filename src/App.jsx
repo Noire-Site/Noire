@@ -1,7 +1,7 @@
 /* ===================================================
    TEAM 2 — App Shell: Routing, Layout, Context Providers
    =================================================== */
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CartProvider } from './contexts/CartContext';
@@ -20,10 +20,16 @@ import AdminGuard from './components/admin/AdminGuard';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProductForm from './pages/admin/ProductForm';
+import ProductsPage from './pages/admin/ProductsPage';
+import OrdersPage from './pages/admin/OrdersPage';
+import OrderDetail from './pages/admin/OrderDetail';
+import InventoryPage from './pages/admin/InventoryPage';
+import TeamPage from './pages/admin/TeamPage';
 
 // Pages
 import Home from './pages/Home';
 import Shop from './pages/Shop';
+import CartPage from './pages/CartPageFull';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import About from './pages/About';
@@ -31,6 +37,7 @@ import Contact from './pages/Contact';
 import Returns from './pages/Returns';
 import SizeGuide from './pages/SizeGuide';
 import Wishlist from './pages/Wishlist';
+import UPICheckout from './pages/UPICheckout';
 import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 import Privacy from './pages/Privacy';
@@ -47,6 +54,7 @@ export default function App() {
     if (pathname.startsWith('/admin')) { document.title = 'Nøiré — Admin'; return; }
     if (pathname === '/shop') pageName = 'Shop';
     else if (pathname.startsWith('/product/')) pageName = 'Product';
+    else if (pathname === '/cart') pageName = 'Cart';
     else if (pathname === '/checkout') pageName = 'Checkout';
     else if (pathname === '/about') pageName = 'About';
     else if (pathname === '/contact') pageName = 'Contact';
@@ -65,12 +73,18 @@ export default function App() {
   // Admin routes — no site chrome
   const isAdminRoute = location.pathname.startsWith('/admin');
   if (isAdminRoute) {
+    const guarded = (Page) => <AdminLayout><AdminGuard><Page /></AdminGuard></AdminLayout>;
     return (
       <Routes>
-        <Route path="/admin/login" element={<AdminLayout><AdminLogin /></AdminLayout>} />
-        <Route path="/admin" element={<AdminLayout><AdminGuard><AdminDashboard /></AdminGuard></AdminLayout>} />
-        <Route path="/admin/products/new" element={<AdminLayout><AdminGuard><ProductForm /></AdminGuard></AdminLayout>} />
-        <Route path="/admin/products/:id" element={<AdminLayout><AdminGuard><ProductForm /></AdminGuard></AdminLayout>} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={guarded(AdminDashboard)} />
+        <Route path="/admin/products" element={guarded(ProductsPage)} />
+        <Route path="/admin/products/new" element={guarded(ProductForm)} />
+        <Route path="/admin/products/:id" element={guarded(ProductForm)} />
+        <Route path="/admin/orders" element={guarded(OrdersPage)} />
+        <Route path="/admin/orders/:id" element={guarded(OrderDetail)} />
+        <Route path="/admin/inventory" element={guarded(InventoryPage)} />
+        <Route path="/admin/team" element={guarded(TeamPage)} />
       </Routes>
     );
   }
@@ -89,6 +103,8 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/product/:slug" element={<ProductDetail />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/upi" element={<UPICheckout />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />

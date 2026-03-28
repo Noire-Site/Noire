@@ -125,11 +125,11 @@ export default function CartDrawer() {
             </div>
             <p className="text-xs text-brand-gray">Shipping & taxes calculated at checkout</p>
             <Link
-              to="/checkout"
+              to="/cart"
               onClick={() => setIsOpen(false)}
               className="block w-full text-center bg-brand-orange hover:bg-brand-orange-hover text-white py-3.5 rounded-pill font-medium transition-colors"
             >
-              Checkout
+              Go to Cart
             </Link>
             <button
               onClick={() => setIsOpen(false)}

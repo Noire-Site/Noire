@@ -44,7 +44,13 @@ export default function AdminLogin() {
     'w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded px-4 py-3 text-white placeholder-[#5A5651] focus:outline-none focus:border-[#FF4500] transition-colors text-sm';
 
   return (
-    <div className="flex items-center justify-center min-h-[70vh]">
+    <div style={{ minHeight: '100vh', background: '#0D0D0D', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+        <span style={{ fontFamily: "'Big Shoulders Display', 'Bebas Neue', sans-serif", fontSize: '28px', letterSpacing: '0.04em' }}>
+          <span style={{ color: '#FF4500' }}>NØ</span>IRÉ
+        </span>
+      </div>
+    <div className="flex items-center justify-center" style={{ width: '100%' }}>
       <div className="w-full max-w-sm">
         <h1
           style={{ fontFamily: "'Big Shoulders Display', 'Bebas Neue', sans-serif" }}
@@ -84,6 +90,7 @@ export default function AdminLogin() {
           </button>
         </form>
       </div>
+    </div>
     </div>
   );
 }

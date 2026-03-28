@@ -48,7 +48,7 @@ export default function ProductDetail() {
 
   const handleAdd = () => {
     if (!selectedSize) { setSizeAlert(true); return; }
-    const color = selectedColor || product.colors[0].name;
+    const color = selectedColor || product.colors[0]?.name || '';
     addItem(product, selectedSize, color);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -124,7 +124,7 @@ export default function ProductDetail() {
           {/* Color picker */}
           <div className="mb-6">
             <h3 className="text-sm font-medium mb-3">
-              Color: <span className="text-brand-gray">{selectedColor || product.colors[0].name}</span>
+              Color: <span className="text-brand-gray">{selectedColor || product.colors[0]?.name || '—'}</span>
             </h3>
             <div className="flex gap-3">
               {product.colors.map(c => (
@@ -132,7 +132,7 @@ export default function ProductDetail() {
                   key={c.hex}
                   onClick={() => setSelectedColor(c.name)}
                   className={`w-10 h-10 rounded-full border-2 transition-all ${
-                    (selectedColor || product.colors[0].name) === c.name ? 'border-brand-orange scale-110' : 'border-brand-gray-light dark:border-[#2A2A2A]'
+                    (selectedColor || product.colors[0]?.name) === c.name ? 'border-brand-orange scale-110' : 'border-brand-gray-light dark:border-[#2A2A2A]'
                   }`}
                   style={{ backgroundColor: c.hex }}
                   aria-label={`Select color ${c.name}`}

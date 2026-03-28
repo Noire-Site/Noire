@@ -1,13 +1,21 @@
 /* TEAM 4 — Cart Context: Full cart state management */
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const CartContext = createContext();
 
+function load(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+}
+
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => load('cart_items', []));
   const [isOpen, setIsOpen] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState(() => load('cart_promo_code', ''));
+  const [promoDiscount, setPromoDiscount] = useState(() => load('cart_promo_discount', 0));
+
+  useEffect(() => { localStorage.setItem('cart_items', JSON.stringify(items)); }, [items]);
+  useEffect(() => { localStorage.setItem('cart_promo_code', JSON.stringify(promoCode)); }, [promoCode]);
+  useEffect(() => { localStorage.setItem('cart_promo_discount', JSON.stringify(promoDiscount)); }, [promoDiscount]);
 
   const addItem = useCallback((product, size, color) => {
     setItems(prev => {

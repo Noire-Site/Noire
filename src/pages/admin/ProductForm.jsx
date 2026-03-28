@@ -5,6 +5,17 @@ import { supabase } from '../../lib/supabase';
 import TagInput from '../../components/admin/TagInput';
 import ColorPicker from '../../components/admin/ColorPicker';
 
+async function uploadImage(file) {
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  const path = `products/${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage
+    .from('product-images')
+    .upload(path, file, { upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 const CATEGORIES = ['Men', 'Women', 'Unisex'];
 
@@ -41,28 +52,16 @@ function ImageUpload({ label, currentUrl, onUpload, onError, optional = false })
     setUploadError('');
     onError?.(false);
     setUploading(true);
-
-    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    const path = `products/${Date.now()}-${safeName}`;
-
-    const { error } = await supabase.storage
-      .from('product-images')
-      .upload(path, file, { upsert: false });
-
-    if (error) {
+    try {
+      const url = await uploadImage(file);
+      onUpload(url);
+      onError?.(false);
+    } catch {
       setUploadError('Upload failed — try again');
       onError?.(true);
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: urlData } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(path);
-
-    onUpload(urlData.publicUrl);
-    onError?.(false);
-    setUploading(false);
   };
 
   return (
@@ -118,6 +117,86 @@ function ImageUpload({ label, currentUrl, onUpload, onError, optional = false })
   );
 }
 
+function GalleryUpload({ images, onChange }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const inputRef = useRef(null);
+
+  const handleFiles = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploadError('');
+    setUploading(true);
+    try {
+      const urls = await Promise.all(files.map(uploadImage));
+      onChange([...images, ...urls]);
+    } catch {
+      setUploadError('One or more uploads failed — try again');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const remove = (idx) => onChange(images.filter((_, i) => i !== idx));
+
+  return (
+    <div>
+      <label className={labelClass}>Additional Images (optional)</label>
+      <div className="flex flex-wrap gap-3 mt-1">
+        {images.map((url, idx) => (
+          <div key={url + idx} className="relative group">
+            <img
+              src={url}
+              alt={`gallery ${idx + 1}`}
+              className="h-24 w-24 rounded object-cover border border-[#2A2A2A]"
+            />
+            <button
+              type="button"
+              onClick={() => remove(idx)}
+              className="absolute -top-1 -right-1 w-5 h-5 bg-[#1A1A1A] border border-[#2A2A2A] rounded-full text-[#5A5651] hover:text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Remove image"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+
+        {/* Add button */}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="h-24 w-24 rounded border border-dashed border-[#3A3A3A] text-[#5A5651] hover:border-[#FF4500] hover:text-[#FF4500] flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-50"
+          aria-label="Add images"
+        >
+          {uploading ? (
+            <div className="w-5 h-5 border border-[#FF4500] border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="text-xs font-mono">Add</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleFiles}
+        className="hidden"
+      />
+      {uploadError && <p className="text-red-400 text-xs mt-2">{uploadError}</p>}
+      <p className="text-[#5A5651] text-xs mt-1">Select multiple files at once. Shown in the product gallery.</p>
+    </div>
+  );
+}
+
 export default function ProductForm() {
   const { id } = useParams();
   const isEdit = !!id;
@@ -142,6 +221,7 @@ export default function ProductForm() {
     colors: [],
     image_primary: '',
     image_hover: '',
+    images: [],
     stock: '',
     description: '',
   });
@@ -167,6 +247,7 @@ export default function ProductForm() {
         colors: data.colors ?? [],
         image_primary: data.image_primary ?? '',
         image_hover: data.image_hover ?? '',
+        images: data.images ?? [],
         stock: data.stock ?? '',
         description: data.description ?? '',
       });
@@ -225,6 +306,7 @@ export default function ProductForm() {
       colors: form.colors,
       image_primary: form.image_primary.trim() || null,
       image_hover: form.image_hover.trim() || null,
+      images: form.images,
       stock: Number(form.stock),
       description: form.description.trim() || null,
     };
@@ -380,6 +462,12 @@ export default function ProductForm() {
           currentUrl={form.image_hover}
           onUpload={(url) => set('image_hover', url)}
           optional
+        />
+
+        {/* Gallery Images */}
+        <GalleryUpload
+          images={form.images}
+          onChange={(urls) => set('images', urls)}
         />
 
         {/* Stock */}

@@ -1,9 +1,19 @@
 /* TEAM 4 — Checkout: Multi-step form with promo code, order summary, confirmation */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, useUser, SignInButton, SignUpButton } from '@clerk/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../utils/supabase';
+
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+
+function generateOrderId() {
+  const d = new Date();
+  const date = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `NR-${date}-${rand}`;
+}
 
 const InputField = ({ label, field, type = 'text', placeholder, form, errors, update }) => (
   <div>
@@ -34,11 +44,16 @@ export default function Checkout() {
   const [orderNumber, setOrderNumber] = useState('');
   const [errors, setErrors] = useState({});
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const shippingCost = 0;
+  const orderTotal = useMemo(() => total, [total]);
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
     address: '', city: '', country: '', postal: '',
-    cardNumber: '', expiry: '', cvv: '',
   });
 
   const update = (field, value) => {
@@ -139,11 +154,7 @@ export default function Checkout() {
       if (!form.country.trim()) errs.country = 'Country is required';
       if (!form.postal.trim()) errs.postal = 'PIN code is required';
     }
-    if (step === 2) {
-      if (!form.cardNumber.trim() || form.cardNumber.replace(/\s/g, '').length < 16) errs.cardNumber = 'Valid card number is required';
-      if (!form.expiry.trim() || !/^\d{2}\/\d{2}$/.test(form.expiry)) errs.expiry = 'MM/YY format required';
-      if (!form.cvv.trim() || form.cvv.length < 3) errs.cvv = 'Valid CVV is required';
-    }
+    // Step 2 (Payment) — no validation needed, QR is auto-generated
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -167,45 +178,39 @@ export default function Checkout() {
   };
 
   const handleSubmit = async () => {
-    const num = 'NR-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    setOrderNumber(num);
+    setPlacing(true);
+    setSaveError('');
 
-    // Send order confirmation email
-    try {
-      await supabase.functions.invoke('send-email', {
-        body: {
-          to: form.email,
-          subject: `Order Confirmed — ${num}`,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="font-size: 24px;">Order Confirmed ✓</h1>
-              <p>Hi ${form.name},</p>
-              <p>Thanks for shopping with <strong>Nøiré</strong>. Your order <strong>${num}</strong> has been confirmed.</p>
-              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                <tr style="border-bottom: 1px solid #eee;">
-                  <td style="padding: 8px 0; color: #666;">Items</td>
-                  <td style="padding: 8px 0; text-align: right;">${items.length} item${items.length > 1 ? 's' : ''}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #eee;">
-                  <td style="padding: 8px 0; color: #666;">Total</td>
-                  <td style="padding: 8px 0; text-align: right; font-weight: bold;">₹${total.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #666;">Shipping to</td>
-                  <td style="padding: 8px 0; text-align: right;">${form.address}, ${form.city} ${form.postal}</td>
-                </tr>
-              </table>
-              <p style="color: #666; font-size: 14px;">We'll send you a tracking number once your order ships.</p>
-              <p style="margin-top: 24px;">— Nøiré Team</p>
-            </div>
-          `,
-        },
-      });
-    } catch (e) {
-      console.error('Email send failed:', e);
+    const orderId = generateOrderId();
+    const shippingText = [form.address, form.city, form.country, form.postal].filter(Boolean).join(', ');
+
+    const { error } = await supabase.from('orders').insert({
+      order_id: orderId,
+      customer_name: form.name,
+      customer_email: form.email,
+      customer_phone: form.phone,
+      shipping_address: shippingText,
+      items: items.map(item => ({
+        name: item.name,
+        size: item.size,
+        color: item.color,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      total_amount: orderTotal,
+      status: 'pending',
+    });
+
+    if (error) {
+      console.error('Supabase order insert error:', error);
+      setSaveError(`Error: ${error.message || error.code || 'Unknown error'}`);
+      setPlacing(false);
+      return;
     }
 
     clearCart();
+    setOrderNumber(orderId);
+    setPlacing(false);
   };
 
   const handlePromo = () => {
@@ -228,24 +233,74 @@ export default function Checkout() {
 
   // Order confirmation
   if (orderNumber) {
+    const waMessage = `Hi, my Order ID is ${orderNumber}`;
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(orderNumber);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
-      <main className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <div className="mb-6">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+      <main className="max-w-lg mx-auto px-4 py-16 text-center">
+        <h1 className="font-heading text-5xl sm:text-6xl mb-2 text-brand-offwhite dark:text-brand-offwhite">ORDER PLACED</h1>
+        <p className="text-brand-gray mb-8">Your order has been received.</p>
+
+        {/* Order ID box */}
+        <div className="bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-6 mb-8">
+          <p className="text-xs text-brand-gray font-mono uppercase tracking-widest mb-2">Order ID</p>
+          <div className="flex items-center justify-center gap-3">
+            <span className="font-mono text-2xl font-bold text-brand-orange">{orderNumber}</span>
+            <button
+              onClick={handleCopy}
+              className="p-2 rounded-md bg-brand-gray-light dark:bg-[#2A2A2A] hover:bg-brand-orange/10 transition-colors"
+              title="Copy Order ID"
+            >
+              {copied ? (
+                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-brand-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              )}
+            </button>
           </div>
-          <h1 className="font-heading text-4xl sm:text-5xl mb-2">ORDER CONFIRMED</h1>
-          <p className="text-brand-gray">Thanks for shopping with Nøiré.</p>
         </div>
-        <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-6 mb-8">
-          <p className="text-sm text-brand-gray mb-1">Order Number</p>
-          <p className="font-mono text-2xl font-bold text-brand-orange">{orderNumber}</p>
-          <p className="text-sm text-brand-gray mt-4">We'll send a confirmation email to <strong>{form.email}</strong></p>
+
+        {/* WhatsApp QR */}
+        <div className="bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-6 mb-4">
+          <div className="bg-white p-3 rounded-xl inline-block mb-4">
+            <QRCodeSVG value={waUrl} size={180} level="M" />
+          </div>
+          <p className="text-sm text-brand-gray mb-5 leading-relaxed">
+            Scan this QR code or click the button below to send us your Order ID on WhatsApp to confirm your order.
+          </p>
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white px-6 py-3 rounded-pill font-medium transition-colors"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.553 4.103 1.522 5.828L0 24l6.336-1.5A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.869 9.869 0 01-5.031-1.378l-.361-.214-3.741.885.939-3.619-.235-.373A9.865 9.865 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106S21.894 6.58 21.894 12 17.42 21.894 12 21.894z"/>
+            </svg>
+            Message us on WhatsApp
+          </a>
         </div>
-        <Link to="/shop" className="inline-block bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3 rounded-pill font-medium transition-colors">
-          Continue Shopping
+
+        {/* Apology note */}
+        <div className="bg-white/5 dark:bg-[#1A1A1A]/50 border border-brand-gray-light/30 dark:border-[#2A2A2A] rounded-card px-5 py-4 mb-8 text-left">
+          <p className="text-xs text-brand-gray leading-relaxed">
+            We apologize for the inconvenience — we're currently setting up payments on our website. In the meantime, please send us your Order ID on WhatsApp and we'll confirm your order manually as soon as possible. Thank you for your patience.
+          </p>
+        </div>
+
+        <Link to="/shop" className="text-sm text-brand-gray hover:text-brand-orange transition-colors">
+          ← Continue Shopping
         </Link>
       </main>
     );
@@ -356,35 +411,52 @@ export default function Checkout() {
             </div>
           )}
 
-          {/* Step 3: Payment */}
+          {/* Step 3: Review & Place */}
           {step === 2 && (
             <div className="space-y-4">
-              <div className="bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-4 mb-4">
-                <p className="text-xs text-brand-gray font-mono uppercase tracking-wider mb-2">💳 This is a demo — no real payment will be processed</p>
+              <div className="bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-5">
+                <p className="text-xs font-mono uppercase tracking-widest text-brand-gray mb-3">Delivering to</p>
+                <p className="text-sm font-medium">{form.name}</p>
+                <p className="text-sm text-brand-gray">{form.address}, {form.city}, {form.country} – {form.postal}</p>
+                <p className="text-sm text-brand-gray">{form.phone}</p>
               </div>
-              <InputField label="Card Number" field="cardNumber" placeholder="4242 4242 4242 4242" form={form} errors={errors} update={update} />
-              <div className="grid grid-cols-2 gap-4">
-                <InputField label="Expiry" field="expiry" placeholder="12/28" form={form} errors={errors} update={update} />
-                <InputField label="CVV" field="cvv" placeholder="123" form={form} errors={errors} update={update} />
+              <div className="bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-5 space-y-3">
+                <p className="text-xs font-mono uppercase tracking-widest text-brand-gray mb-1">Items</p>
+                {items.map(item => (
+                  <div key={item.key} className="flex justify-between items-center text-sm">
+                    <span className="text-brand-gray line-clamp-1 flex-1 mr-4">{item.name} <span className="text-xs">× {item.quantity}</span></span>
+                    <span className="font-mono font-medium shrink-0">₹{(item.price * item.quantity).toFixed(0)}</span>
+                  </div>
+                ))}
+                <div className="border-t border-brand-gray-light dark:border-[#2A2A2A] pt-3 flex justify-between font-bold">
+                  <span>Total</span>
+                  <span className="font-mono text-brand-orange">₹{orderTotal.toFixed(2)}</span>
+                </div>
               </div>
+              <p className="text-xs text-brand-gray text-center">After placing, you'll receive a WhatsApp link to confirm your order with us.</p>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex gap-3 mt-8">
+          {saveError && (
+            <p className="mt-6 text-sm text-red-500 text-center">{saveError}</p>
+          )}
+          <div className="flex gap-3 mt-4">
             {step > 0 && (
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-6 py-3 border-2 border-brand-gray-light dark:border-[#2A2A2A] rounded-pill font-medium hover:border-brand-orange transition-colors"
+                disabled={placing}
+                className="px-6 py-3 border-2 border-brand-gray-light dark:border-[#2A2A2A] rounded-pill font-medium hover:border-brand-orange transition-colors disabled:opacity-50"
               >
                 Back
               </button>
             )}
             <button
               onClick={handleNext}
-              className="flex-1 bg-brand-orange hover:bg-brand-orange-hover text-white py-3 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5"
+              disabled={placing}
+              className="flex-1 bg-brand-orange hover:bg-brand-orange-hover text-white py-3 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:translate-y-0"
             >
-              {step === 2 ? 'Place Order' : 'Continue'}
+              {placing ? 'Placing Order…' : step === 2 ? 'Place Order' : 'Continue'}
             </button>
           </div>
         </div>
@@ -444,13 +516,9 @@ export default function Checkout() {
                   <span className="font-mono">-₹{discount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-gray">Shipping</span>
-                <span className="font-mono">{subtotal >= 5000 ? 'Free' : '₹499'}</span>
-              </div>
               <div className="flex justify-between font-bold text-lg pt-2 border-t border-brand-gray-light dark:border-[#2A2A2A]">
                 <span>Total</span>
-                <span className="font-mono">₹{(total + (subtotal >= 5000 ? 0 : 499)).toFixed(2)}</span>
+                <span className="font-mono">₹{total.toFixed(2)}</span>
               </div>
             </div>
           </div>
