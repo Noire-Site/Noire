@@ -1,20 +1,12 @@
 /* TEAM 3 — ProductCard: Card with hover effects, badges, quick-add, wishlist */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 
 export default function ProductCard({ product }) {
   const [hovered, setHovered] = useState(false);
-  const { addItem } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wishlisted = isInWishlist(product.id);
-
-  const handleQuickAdd = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(product, product.sizes[0] ?? '', product.colors[0]?.name ?? '');
-  };
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -63,15 +55,6 @@ export default function ProductCard({ product }) {
             </svg>
           </button>
 
-          {/* Quick Add */}
-          <div className={`absolute bottom-3 left-3 right-3 z-10 transition-all duration-300 ${hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-            <button
-              onClick={handleQuickAdd}
-              className="w-full bg-brand-orange hover:bg-brand-orange-hover text-white text-sm font-medium py-2.5 rounded-pill transition-colors"
-            >
-              Quick Add
-            </button>
-          </div>
         </div>
 
         {/* Info */}
