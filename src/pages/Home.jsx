@@ -90,7 +90,7 @@ export default function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-center gap-16 sm:gap-24 text-center">
             {[
-              { value: 'FAST SHIPPING', label: 'Free over ₹5000' },
+              { value: 'FAST SHIPPING', label: 'Always Free' },
               { value: 'SS26',          label: 'Latest Season'   },
             ].map(stat => (
               <div key={stat.label} className="py-4">
@@ -107,7 +107,7 @@ export default function Home() {
         <div className="animate-marquee whitespace-nowrap flex">
           {Array.from({ length: 2 }).map((_, i) => (
             <span key={i} className="inline-flex items-center gap-8 mr-8">
-              {['NEW DROPS WEEKLY', '★', 'FREE SHIPPING OVER ₹5000', '★', 'WEAR THE NØIRÉ', '★', 'NØIRÉ EXCLUSIVE', '★', 'SS26 COLLECTION', '★'].map((text, j) => (
+              {['NEW DROPS WEEKLY', '★', 'FREE SHIPPING', '★', 'WEAR THE NØIRÉ', '★', 'NØIRÉ EXCLUSIVE', '★', 'SS26 COLLECTION', '★'].map((text, j) => (
                 <span key={j} className="font-heading text-lg text-white tracking-wider">{text}</span>
               ))}
             </span>

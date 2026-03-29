@@ -13,7 +13,7 @@ function FadeIn({ children, className = '' }) {
 }
 
 const faqs = [
-  { q: 'How long does shipping take?', a: 'Standard shipping is 4-7 business days. Express is 2-3 business days. Free shipping on orders over ₹5000.' },
+  { q: 'How long does shipping take?', a: 'Standard shipping is 4-7 business days. Express is 2-3 business days. Free shipping.' },
   { q: 'What\'s your return policy?', a: 'We accept returns within 30 days of delivery. Items must be unworn, unwashed, and in original packaging.' },
   { q: 'Do you ship internationally?', a: 'Yes! We ship to over 40 countries. International shipping is calculated at checkout.' },
   { q: 'How do I track my order?', a: 'You\'ll receive a tracking number via email once your order ships. You can also check your order status on our website.' },
