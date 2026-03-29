@@ -208,6 +208,21 @@ export default function Checkout() {
       return;
     }
 
+    // Fire order notification email (non-blocking — don't fail checkout if email fails)
+    fetch('/api/send-order-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        shippingAddress: shippingText,
+        items: items.map(item => ({ name: item.name, size: item.size, color: item.color, quantity: item.quantity, price: item.price })),
+        total: orderTotal,
+      }),
+    }).catch(err => console.warn('Email notification failed:', err));
+
     clearCart();
     setOrderNumber(orderId);
     setPlacing(false);
