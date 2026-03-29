@@ -6,7 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../utils/supabase';
 
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+const WHATSAPP_NUMBER = '919877432199';
 
 function generateOrderId() {
   const d = new Date();

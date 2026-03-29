@@ -21,7 +21,7 @@ const STATUS_STYLE = {
   cancelled:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+const WHATSAPP_NUMBER = '919877432199';
 
 export default function Account() {
   const { user, isLoaded } = useUser();
