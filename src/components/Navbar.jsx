@@ -63,47 +63,39 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Auth */}
-          {isSignedIn ? (
-            <Link
-              to="/account"
-              className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
-              aria-label="My Account"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </Link>
-          ) : (
-            <>
-              <SignInButton mode="modal">
-                <button className="text-sm font-medium text-brand-gray hover:text-brand-orange transition-colors px-2 py-1">
-                  Sign In
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="text-sm font-medium bg-brand-orange hover:bg-brand-orange-hover text-white px-3 py-1.5 rounded-pill transition-colors">
-                  Sign Up
-                </button>
-              </SignUpButton>
-            </>
-          )}
 
-          {/* Search Toggle */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
-            aria-label="Search products"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
+          {/* Desktop-only: Auth */}
+          <div className="hidden lg:flex items-center gap-1">
+            {isSignedIn ? (
+              <Link
+                to="/account"
+                className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
+                aria-label="My Account"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </Link>
+            ) : (
+              <>
+                <SignInButton mode="modal">
+                  <button className="text-sm font-medium text-brand-gray hover:text-brand-orange transition-colors px-2 py-1">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="text-sm font-medium bg-brand-orange hover:bg-brand-orange-hover text-white px-3 py-1.5 rounded-pill transition-colors">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </>
+            )}
+          </div>
 
-          {/* Dark mode toggle */}
+          {/* Desktop-only: Dark mode toggle */}
           <button
             onClick={toggle}
-            className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
+            className="hidden lg:flex p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {dark ? (
@@ -117,10 +109,10 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Wishlist */}
+          {/* Desktop-only: Wishlist */}
           <button
             onClick={() => navigate('/wishlist')}
-            className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300 relative"
+            className="hidden lg:flex p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300 relative"
             aria-label={`Wishlist (${wishlist.length} items)`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -133,7 +125,18 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Cart */}
+          {/* Search — always visible */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
+            aria-label="Search products"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+
+          {/* Cart — always visible */}
           <button
             onClick={() => setIsOpen(true)}
             className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300 relative"
@@ -149,7 +152,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Mobile menu toggle */}
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors duration-300"
@@ -188,6 +191,55 @@ export default function Navbar() {
           >
             Contact
           </Link>
+          <Link
+            to="/wishlist"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-base font-medium text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite transition-colors"
+          >
+            Wishlist {wishlist.length > 0 && `(${wishlist.length})`}
+          </Link>
+
+          <div className="pt-2 border-t border-brand-gray-light dark:border-[#2A2A2A] flex items-center justify-between">
+            {/* Auth */}
+            {isSignedIn ? (
+              <Link
+                to="/account"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-base font-medium text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite transition-colors"
+              >
+                My Account
+              </Link>
+            ) : (
+              <div className="flex gap-3">
+                <SignInButton mode="modal">
+                  <button onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-brand-gray hover:text-brand-orange transition-colors">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button onClick={() => setMobileMenuOpen(false)} className="text-base font-medium bg-brand-orange text-white px-4 py-1.5 rounded-pill">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </div>
+            )}
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggle}
+              className="p-2 rounded-full hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] transition-colors"
+              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {dark ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       )}
     </header>
