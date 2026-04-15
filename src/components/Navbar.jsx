@@ -1,6 +1,6 @@
 /* TEAM 2 — Navbar: Sticky nav with logo, search, wishlist, cart, dark mode toggle */
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, SignInButton, SignUpButton } from '@clerk/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useCart } from '../contexts/CartContext';
@@ -10,6 +10,15 @@ import SearchBar from './SearchBar';
 export default function Navbar() {
   const { isSignedIn } = useAuth();
   const { dark, toggle } = useTheme();
+  const location = useLocation();
+
+  const isLinkActive = (to) => {
+    const [path, search] = to.split('?');
+    if (location.pathname !== path) return false;
+    if (!search) return location.search === '' || location.search === '?';
+    return location.search === `?${search}`;
+  };
+
   const { itemCount, setIsOpen } = useCart();
   const { wishlist } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -54,7 +63,11 @@ export default function Navbar() {
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite transition-colors duration-300"
+              className={`text-sm font-medium transition-colors duration-300 ${
+                isLinkActive(link.to)
+                  ? 'text-brand-orange'
+                  : 'text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite'
+              }`}
             >
               {link.label}
             </Link>
@@ -173,13 +186,15 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-brand-gray-light dark:border-[#2A2A2A] bg-brand-offwhite dark:bg-brand-black px-4 py-4 space-y-3">
+        <div className="lg:hidden border-t border-brand-gray-light dark:border-[#2A2A2A] bg-brand-offwhite dark:bg-brand-black px-4 py-4 space-y-3 animate-fade-in-up" style={{ animationDuration: '0.2s' }}>
           {navLinks.map(link => (
             <Link
               key={link.to}
               to={link.to}
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite transition-colors"
+              className={`block text-base font-medium transition-colors ${
+                isLinkActive(link.to) ? 'text-brand-orange' : 'text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite'
+              }`}
             >
               {link.label}
             </Link>
@@ -187,16 +202,20 @@ export default function Navbar() {
           <Link
             to="/contact"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-medium text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite transition-colors"
+            className={`block text-base font-medium transition-colors ${
+              location.pathname === '/contact' ? 'text-brand-orange' : 'text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite'
+            }`}
           >
             Contact
           </Link>
           <Link
             to="/wishlist"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-medium text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite transition-colors"
+            className={`block text-base font-medium transition-colors ${
+              location.pathname === '/wishlist' ? 'text-brand-orange' : 'text-brand-gray hover:text-brand-black dark:hover:text-brand-offwhite'
+            }`}
           >
-            Wishlist {wishlist.length > 0 && `(${wishlist.length})`}
+            Wishlist{wishlist.length > 0 && ` (${wishlist.length})`}
           </Link>
 
           <div className="pt-2 border-t border-brand-gray-light dark:border-[#2A2A2A] flex items-center justify-between">

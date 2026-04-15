@@ -1,5 +1,6 @@
 /* TEAM 4 — Cart Context: Full cart state management */
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import { supabase } from '../lib/supabase';
 
 const CartContext = createContext();
 
@@ -11,11 +12,11 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState(() => load('cart_items', []));
   const [isOpen, setIsOpen] = useState(false);
   const [promoCode, setPromoCode] = useState(() => load('cart_promo_code', ''));
-  const [promoDiscount, setPromoDiscount] = useState(() => load('cart_promo_discount', 0));
+  const [promoData, setPromoData] = useState(() => load('cart_promo_data', null));
 
   useEffect(() => { localStorage.setItem('cart_items', JSON.stringify(items)); }, [items]);
   useEffect(() => { localStorage.setItem('cart_promo_code', JSON.stringify(promoCode)); }, [promoCode]);
-  useEffect(() => { localStorage.setItem('cart_promo_discount', JSON.stringify(promoDiscount)); }, [promoDiscount]);
+  useEffect(() => { localStorage.setItem('cart_promo_data', JSON.stringify(promoData)); }, [promoData]);
 
   const addItem = useCallback((product, size, color) => {
     setItems(prev => {
@@ -51,24 +52,68 @@ export function CartProvider({ children }) {
     }).filter(i => i.quantity > 0));
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
-
-  const applyPromo = useCallback((code) => {
-    if (code.toUpperCase() === 'NOIRE20') {
-      setPromoCode(code.toUpperCase());
-      setPromoDiscount(0.2);
-      return { success: true, message: '20% discount applied!' };
-    }
-    return { success: false, message: 'Invalid promo code.' };
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setPromoCode('');
+    setPromoData(null);
   }, []);
+
+  const subtotal = useMemo(
+    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [items]
+  );
+
+  const applyPromo = useCallback(async (code) => {
+    const trimmed = code?.trim().toUpperCase();
+    if (!trimmed) return { success: false, message: 'Enter a promo code.' };
+
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .eq('code', trimmed)
+      .single();
+
+    if (error || !data) return { success: false, message: 'Invalid code.' };
+    if (!data.is_active) return { success: false, message: 'This code is no longer active.' };
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      return { success: false, message: 'Code expired.' };
+    }
+    if (data.max_uses !== null && data.uses_count >= data.max_uses) {
+      return { success: false, message: 'Code has reached its usage limit.' };
+    }
+    if (data.min_order_value && subtotal < data.min_order_value) {
+      return { success: false, message: `Minimum order ₹${data.min_order_value} required.` };
+    }
+
+    setPromoCode(data.code);
+    setPromoData(data);
+
+    const label = data.discount_type === 'percentage'
+      ? `${data.discount_value}% off`
+      : `₹${data.discount_value} off`;
+    return { success: true, message: `${data.code} applied — ${label}!` };
+  }, [subtotal]);
 
   const removePromo = useCallback(() => {
     setPromoCode('');
-    setPromoDiscount(0);
+    setPromoData(null);
   }, []);
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const discount = subtotal * promoDiscount;
+  // Called after a successful order is placed to atomically increment the counter
+  const incrementPromoUses = useCallback(async () => {
+    if (!promoData?.id) return;
+    await supabase.rpc('increment_promo_uses', { promo_id: promoData.id });
+  }, [promoData]);
+
+  const discount = useMemo(() => {
+    if (!promoData) return 0;
+    if (promoData.discount_type === 'percentage') {
+      return subtotal * (promoData.discount_value / 100);
+    }
+    // fixed — never exceed subtotal
+    return Math.min(promoData.discount_value, subtotal);
+  }, [promoData, subtotal]);
+
   const total = subtotal - discount;
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -76,7 +121,7 @@ export function CartProvider({ children }) {
     <CartContext.Provider value={{
       items, isOpen, setIsOpen,
       addItem, removeItem, updateQuantity, clearCart,
-      promoCode, promoDiscount, applyPromo, removePromo,
+      promoCode, promoData, applyPromo, removePromo, incrementPromoUses,
       subtotal, discount, total, itemCount,
     }}>
       {children}

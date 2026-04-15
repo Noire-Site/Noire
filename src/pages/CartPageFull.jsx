@@ -1,24 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../lib/supabase';
 
 export default function CartPage() {
   const {
     items, removeItem, updateQuantity,
     subtotal, discount, total, itemCount,
-    promoCode, applyPromo, removePromo,
+    promoCode, promoData, applyPromo, removePromo,
   } = useCart();
 
   const [promoInput, setPromoInput] = useState('');
   const [promoMsg, setPromoMsg] = useState('');
+  const [promoApplying, setPromoApplying] = useState(false);
+  const [banners, setBanners] = useState([]);
 
-  const orderTotal = total;
+  // Fetch any active show_on_store codes for the banner
+  useEffect(() => {
+    supabase
+      .from('promo_codes')
+      .select('code, discount_type, discount_value')
+      .eq('is_active', true)
+      .eq('show_on_store', true)
+      .then(({ data }) => setBanners(data ?? []));
+  }, []);
 
-  const handlePromo = () => {
-    const result = applyPromo(promoInput.trim());
+  const handlePromo = async () => {
+    setPromoApplying(true);
+    const result = await applyPromo(promoInput.trim());
     setPromoMsg(result.message);
     if (result.success) setPromoInput('');
+    setPromoApplying(false);
   };
+
+  const promoLabel = promoData
+    ? promoData.discount_type === 'percentage'
+      ? `${promoData.discount_value}% off`
+      : `₹${promoData.discount_value} off`
+    : '';
 
   if (items.length === 0) {
     return (
@@ -37,9 +56,43 @@ export default function CartPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-      <h1 className="font-heading text-4xl sm:text-5xl mb-8">
+      <h1 className="font-heading text-4xl sm:text-5xl mb-6">
         YOUR BAG <span className="text-brand-gray text-2xl font-body font-normal">({itemCount})</span>
       </h1>
+
+      {/* Show-on-store promo banners */}
+      {banners.length > 0 && !promoCode && (
+        <div className="space-y-2 mb-6">
+          {banners.map(b => {
+            const label = b.discount_type === 'percentage'
+              ? `${b.discount_value}% off`
+              : `₹${b.discount_value} off`;
+            return (
+              <div
+                key={b.code}
+                className="flex items-center justify-between bg-brand-orange/10 border border-brand-orange/30 rounded-card px-4 py-3"
+              >
+                <p className="text-sm">
+                  Use code{' '}
+                  <button
+                    onClick={() => setPromoInput(b.code)}
+                    className="font-mono font-bold text-brand-orange hover:underline"
+                  >
+                    {b.code}
+                  </button>
+                  {' '}for <strong>{label}</strong>
+                </p>
+                <button
+                  onClick={() => setPromoInput(b.code)}
+                  className="text-xs font-medium text-brand-orange hover:text-brand-orange-hover transition-colors shrink-0 ml-4"
+                >
+                  Apply →
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
 
@@ -50,21 +103,16 @@ export default function CartPage() {
               key={item.key}
               className="flex gap-4 bg-white dark:bg-[#1A1A1A] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card p-4"
             >
-              {/* Image */}
               <div
                 className="w-24 h-28 rounded-md shrink-0"
                 style={{ background: item.image }}
               />
-
-              {/* Details */}
               <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
                   <h3 className="font-medium line-clamp-1">{item.name}</h3>
                   <p className="text-sm text-brand-gray mt-0.5">{item.size} / {item.color}</p>
                 </div>
-
                 <div className="flex items-center justify-between mt-3">
-                  {/* Quantity */}
                   <div className="flex items-center border border-brand-gray-light dark:border-[#2A2A2A] rounded-pill overflow-hidden">
                     <button
                       onClick={() => updateQuantity(item.key, -1)}
@@ -78,7 +126,6 @@ export default function CartPage() {
                       aria-label="Increase quantity"
                     >+</button>
                   </div>
-
                   <div className="flex items-center gap-4">
                     <span className="font-mono font-bold">₹{(item.price * item.quantity).toFixed(2)}</span>
                     <button
@@ -106,7 +153,9 @@ export default function CartPage() {
             <div className="border-t border-brand-gray-light dark:border-[#2A2A2A] pt-4">
               {promoCode ? (
                 <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-3 py-2 rounded-md">
-                  <span className="text-sm font-mono text-green-700 dark:text-green-400">{promoCode} — 20% off</span>
+                  <span className="text-sm font-mono text-green-700 dark:text-green-400">
+                    {promoCode} — {promoLabel}
+                  </span>
                   <button
                     onClick={() => { removePromo(); setPromoMsg(''); }}
                     className="text-xs text-red-500 hover:text-red-700 transition-colors"
@@ -121,23 +170,23 @@ export default function CartPage() {
                       type="text"
                       value={promoInput}
                       onChange={e => { setPromoInput(e.target.value); setPromoMsg(''); }}
-                      onKeyDown={e => e.key === 'Enter' && handlePromo()}
+                      onKeyDown={e => e.key === 'Enter' && !promoApplying && handlePromo()}
                       placeholder="Promo code"
                       className="flex-1 px-3 py-2 text-sm bg-transparent border border-brand-gray-light dark:border-[#2A2A2A] rounded-md focus:outline-none focus:ring-1 focus:ring-brand-orange"
                     />
                     <button
                       onClick={handlePromo}
-                      className="text-sm font-medium text-brand-orange hover:text-brand-orange-hover transition-colors px-1"
+                      disabled={promoApplying}
+                      className="text-sm font-medium text-brand-orange hover:text-brand-orange-hover transition-colors px-1 disabled:opacity-50"
                     >
-                      Apply
+                      {promoApplying ? '…' : 'Apply'}
                     </button>
                   </div>
                   {promoMsg && (
-                    <p className={`text-xs ${promoMsg.includes('Invalid') ? 'text-red-500' : 'text-green-600'}`}>
+                    <p className={`text-xs ${promoMsg.includes('applied') ? 'text-green-600' : 'text-red-500'}`}>
                       {promoMsg}
                     </p>
                   )}
-                  <p className="text-xs text-brand-gray">Try NOIRE20 for 20% off.</p>
                 </div>
               )}
             </div>
@@ -150,13 +199,13 @@ export default function CartPage() {
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                  <span>Discount (NOIRE20)</span>
+                  <span>Discount ({promoCode})</span>
                   <span className="font-mono">−₹{discount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-lg pt-3 border-t border-brand-gray-light dark:border-[#2A2A2A]">
                 <span>Total</span>
-                <span className="font-mono">₹{orderTotal.toFixed(2)}</span>
+                <span className="font-mono">₹{total.toFixed(2)}</span>
               </div>
             </div>
 

@@ -21,8 +21,7 @@ export default function About() {
             <span className="font-mono text-xs uppercase tracking-widest text-brand-orange">Our Story</span>
             <h1 className="font-heading text-5xl sm:text-7xl mt-3 mb-6">WE DON'T DO BORING.</h1>
             <p className="text-lg text-brand-gray max-w-2xl mx-auto leading-relaxed">
-              Nøiré started in a dorm room with a screen printer and a refusal to wear anything generic. 
-              We make clothes for people who'd rather be underdressed than overdone.
+              Nøiré began as Flexwear for a school club project between six friends who couldn't find anything worth wearing. What started as an assignment turned into a brand before we even noticed the shift. No investors, no roadmap — just five teenagers who decided their idea was worth more than a grade.
             </p>
           </FadeIn>
         </div>
@@ -50,8 +49,7 @@ export default function About() {
             <span className="font-mono text-xs uppercase tracking-widest text-brand-orange mb-3">The Beginning</span>
             <h2 className="font-heading text-3xl sm:text-4xl mb-4">STARTED FROM THE DROP</h2>
             <p className="text-brand-gray leading-relaxed mb-4">
-              What started as a side hustle selling hand-printed tees at pop-ups turned into something bigger. 
-              We realized people were tired of the same recycled trends and wanted something that actually had personality.
+               We realized people were tired of the same recycled trends and wanted something that actually had personality.
             </p>
             <p className="text-brand-gray leading-relaxed">
               Every piece we make goes through the same test: would we actually wear this? If the answer isn't an 

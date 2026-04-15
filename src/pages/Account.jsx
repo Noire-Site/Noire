@@ -5,6 +5,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../utils/supabase';
 
+const INDIAN_STATES = [
+  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
+  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
+  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
+  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
+  'Uttarakhand','West Bengal',
+  'Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry',
+];
+
+const EMPTY_ADDR_FORM = { label: '', name: '', phone: '', flat_number: '', apartment: '', landmark: '', street: '', city: '', state: '', pincode: '' };
+
 const tabs = [
   { id: 'profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   { id: 'addresses', label: 'Addresses', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
@@ -21,7 +33,7 @@ const STATUS_STYLE = {
   cancelled:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
-const WHATSAPP_NUMBER = '919877432199';
+const WHATSAPP_NUMBER = '918826359848';
 
 export default function Account() {
   const { user, isLoaded } = useUser();
@@ -33,7 +45,7 @@ export default function Account() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingAddress, setEditingAddress] = useState(null);
-  const [addressForm, setAddressForm] = useState({ label: '', name: '', address: '', city: '', state: '', postal: '', phone: '' });
+  const [addressForm, setAddressForm] = useState(EMPTY_ADDR_FORM);
 
   // Fetch addresses & orders from Supabase
   useEffect(() => {
@@ -78,11 +90,22 @@ export default function Account() {
 
   const startEditAddress = (addr) => {
     setEditingAddress(addr?.id || 'new');
-    setAddressForm(addr ? { label: addr.label, name: addr.name, address: addr.address, city: addr.city, state: addr.state, postal: addr.postal, phone: addr.phone } : { label: '', name: '', address: '', city: '', state: '', postal: '', phone: '' });
+    setAddressForm(addr ? {
+      label:       addr.label       || '',
+      name:        addr.name        || '',
+      phone:       addr.phone       || '',
+      flat_number: addr.flat_number || '',
+      apartment:   addr.apartment   || '',
+      landmark:    addr.landmark    || '',
+      street:      addr.street      || '',
+      city:        addr.city        || '',
+      state:       addr.state       || '',
+      pincode:     addr.pincode     || '',
+    } : EMPTY_ADDR_FORM);
   };
 
   const saveAddress = async () => {
-    if (!addressForm.address.trim() || !addressForm.city.trim()) return;
+    if (!addressForm.flat_number.trim() || !addressForm.street.trim() || !addressForm.city.trim()) return;
     const userId = user.id;
 
     if (editingAddress === 'new') {
@@ -216,18 +239,100 @@ export default function Account() {
                 <div className="bg-white dark:bg-[#1A1A1A] rounded-card p-6">
                   <h3 className="font-medium mb-4 text-brand-black dark:text-brand-offwhite">{editingAddress === 'new' ? 'New Address' : 'Edit Address'}</h3>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {['label', 'name', 'phone', 'address', 'city', 'state', 'postal'].map(field => (
-                      <div key={field} className={field === 'address' ? 'sm:col-span-2' : ''}>
-                        <label className="block text-sm font-medium text-brand-gray mb-1 capitalize">{field === 'postal' ? 'PIN Code' : field}</label>
+                    {/* Label + Name */}
+                    {[
+                      { field: 'label', label: 'Label', placeholder: 'e.g. Home, Office' },
+                      { field: 'name',  label: 'Full Name', placeholder: 'John Doe' },
+                      { field: 'phone', label: 'Phone', placeholder: '+91 98765 43210' },
+                    ].map(({ field, label, placeholder }) => (
+                      <div key={field}>
+                        <label className="block text-sm font-medium text-brand-gray mb-1">{label}</label>
                         <input
                           type="text"
                           value={addressForm[field]}
                           onChange={e => setAddressForm(prev => ({ ...prev, [field]: e.target.value }))}
-                          placeholder={field === 'label' ? 'e.g. Home, Office' : field === 'postal' ? '110001' : field === 'phone' ? '+91 98765 43210' : ''}
+                          placeholder={placeholder}
                           className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
                         />
                       </div>
                     ))}
+                    {/* Flat + Apartment */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-gray mb-1">Flat / House Number *</label>
+                      <input
+                        type="text"
+                        value={addressForm.flat_number}
+                        onChange={e => setAddressForm(prev => ({ ...prev, flat_number: e.target.value }))}
+                        placeholder="B-204"
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-brand-gray mb-1">Apartment / Building Name</label>
+                      <input
+                        type="text"
+                        value={addressForm.apartment}
+                        onChange={e => setAddressForm(prev => ({ ...prev, apartment: e.target.value }))}
+                        placeholder="Sunshine Heights"
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      />
+                    </div>
+                    {/* Landmark */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-brand-gray mb-1">Landmark</label>
+                      <input
+                        type="text"
+                        value={addressForm.landmark}
+                        onChange={e => setAddressForm(prev => ({ ...prev, landmark: e.target.value }))}
+                        placeholder="Near City Mall"
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      />
+                    </div>
+                    {/* Street */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-brand-gray mb-1">Street / Area *</label>
+                      <input
+                        type="text"
+                        value={addressForm.street}
+                        onChange={e => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
+                        placeholder="MG Road, Koramangala"
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      />
+                    </div>
+                    {/* City */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-gray mb-1">City *</label>
+                      <input
+                        type="text"
+                        value={addressForm.city}
+                        onChange={e => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                        placeholder="Bengaluru"
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      />
+                    </div>
+                    {/* State dropdown */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-gray mb-1">State *</label>
+                      <select
+                        value={addressForm.state}
+                        onChange={e => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      >
+                        <option value="">Select state</option>
+                        {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    {/* Pincode */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-gray mb-1">Pincode *</label>
+                      <input
+                        type="number"
+                        value={addressForm.pincode}
+                        onChange={e => setAddressForm(prev => ({ ...prev, pincode: e.target.value }))}
+                        placeholder="560001"
+                        className="w-full px-4 py-3 bg-brand-offwhite dark:bg-[#0D0D0D] border border-brand-gray-light dark:border-[#2A2A2A] rounded-card text-brand-black dark:text-brand-offwhite placeholder:text-brand-gray focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      />
+                    </div>
                   </div>
                   <div className="flex gap-3 mt-4">
                     <button onClick={saveAddress} className="bg-brand-orange hover:bg-brand-orange-hover text-white px-6 py-2.5 rounded-pill text-sm font-medium transition-colors">Save</button>
@@ -252,8 +357,15 @@ export default function Account() {
                         {addr.is_default && <span className="text-[10px] font-mono font-bold bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-pill">DEFAULT</span>}
                       </div>
                       {addr.name && <p className="text-sm text-brand-black dark:text-brand-offwhite">{addr.name}</p>}
-                      <p className="text-sm text-brand-gray">{addr.address}</p>
-                      <p className="text-sm text-brand-gray">{addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postal}</p>
+                      {(addr.flat_number || addr.apartment) && (
+                        <p className="text-sm text-brand-gray">{[addr.flat_number, addr.apartment].filter(Boolean).join(', ')}</p>
+                      )}
+                      {addr.landmark && <p className="text-sm text-brand-gray">Near {addr.landmark}</p>}
+                      {addr.street && <p className="text-sm text-brand-gray">{addr.street}</p>}
+                      <p className="text-sm text-brand-gray">
+                        {[addr.city, addr.state].filter(Boolean).join(', ')}
+                        {addr.pincode ? ` — ${addr.pincode}` : ''}
+                      </p>
                       {addr.phone && <p className="text-sm text-brand-gray">{addr.phone}</p>}
                     </div>
                     <div className="flex gap-2 shrink-0">

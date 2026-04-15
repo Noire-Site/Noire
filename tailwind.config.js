@@ -49,14 +49,34 @@ export default {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' },
         },
+        // Wishlist heart pop — quick scale burst on add
+        'heart-pop': {
+          '0%':   { transform: 'scale(1)' },
+          '35%':  { transform: 'scale(1.45)' },
+          '65%':  { transform: 'scale(0.88)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        // Checkout step slide-in — step content enters from right
+        'step-in': {
+          '0%':   { opacity: '0', transform: 'translateX(14px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        // Subtle entrance for overlay/modal content
+        'scale-in': {
+          '0%':   { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
-        'slide-in-right': 'slide-in-right 0.3s ease-out forwards',
-        'slide-out-right': 'slide-out-right 0.3s ease-in forwards',
+        'slide-in-right': 'slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'slide-out-right': 'slide-out-right 0.25s ease-in forwards',
         marquee: 'marquee 20s linear infinite',
         float: 'float 3s ease-in-out infinite',
         'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
+        'heart-pop': 'heart-pop 0.38s cubic-bezier(0.16, 1, 0.3, 1)',
+        'step-in': 'step-in 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+        'scale-in': 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

@@ -33,6 +33,44 @@ function StatusBadge({ status }) {
   );
 }
 
+function CopyAddressButton({ label, t }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(label).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      style={{
+        ...MONO, fontSize: '11px', padding: '6px 14px', borderRadius: '6px',
+        background: copied ? '#0A1F0A' : t.surface2,
+        color: copied ? '#4ADE80' : t.textSub,
+        border: `1px solid ${copied ? '#4ADE8044' : t.border2}`,
+        cursor: 'pointer', transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', gap: '6px',
+      }}
+    >
+      {copied ? (
+        <>
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          Copied
+        </>
+      ) : (
+        <>
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Copy Address
+        </>
+      )}
+    </button>
+  );
+}
+
 function Section({ title, children }) {
   const { t } = useAdminTheme();
   return (
@@ -115,9 +153,33 @@ export default function OrderDetail() {
   }
 
   const currentStatus = orderStatus(order);
-  const addr = typeof order.shipping_address === 'string'
-    ? order.shipping_address
-    : [order.shipping_address?.address || order.shipping_address?.street, order.shipping_address?.city, order.shipping_address?.postal, order.shipping_address?.country].filter(Boolean).join(', ');
+
+  // Build structured address from new columns; fall back to legacy shipping_address string
+  const hasStructured = order.flat_number || order.street;
+  const formattedAddress = hasStructured
+    ? [
+        order.flat_number,
+        order.apartment,
+        order.landmark ? `Near ${order.landmark}` : null,
+        order.street,
+        order.city && order.state ? `${order.city}, ${order.state}` : (order.city || order.state),
+        order.pincode,
+      ].filter(Boolean).join('\n')
+    : (typeof order.shipping_address === 'string'
+        ? order.shipping_address
+        : [order.shipping_address?.street, order.shipping_address?.city, order.shipping_address?.postal].filter(Boolean).join(', '));
+
+  const shippingLabelText = hasStructured
+    ? [
+        order.customer_name,
+        order.flat_number,
+        order.apartment,
+        order.landmark ? `Near ${order.landmark}` : null,
+        order.street,
+        order.city && order.state ? `${order.city}, ${order.state} - ${order.pincode}` : null,
+        order.customer_phone,
+      ].filter(Boolean).join('\n')
+    : `${order.customer_name}\n${formattedAddress}\n${order.customer_phone || ''}`;
 
   return (
     <div>
@@ -221,7 +283,49 @@ export default function OrderDetail() {
           <p style={{ ...MONO, fontSize: '12px', color: t.textSub, margin: 0 }}>{orderPhone(order)}</p>
         </Section>
         <Section title="Shipping Address">
-          <p style={{ color: t.text, lineHeight: 1.7, margin: 0, fontSize: '14px' }}>{addr || '—'}</p>
+          {hasStructured ? (
+            <div>
+              {order.flat_number && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ ...MONO, fontSize: '11px', color: t.textMuted, width: '90px', flexShrink: 0 }}>FLAT / HOUSE</span>
+                  <span style={{ fontSize: '14px', color: t.text }}>{order.flat_number}</span>
+                </div>
+              )}
+              {order.apartment && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ ...MONO, fontSize: '11px', color: t.textMuted, width: '90px', flexShrink: 0 }}>APARTMENT</span>
+                  <span style={{ fontSize: '14px', color: t.text }}>{order.apartment}</span>
+                </div>
+              )}
+              {order.landmark && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ ...MONO, fontSize: '11px', color: t.textMuted, width: '90px', flexShrink: 0 }}>LANDMARK</span>
+                  <span style={{ fontSize: '14px', color: t.text }}>{order.landmark}</span>
+                </div>
+              )}
+              {order.street && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ ...MONO, fontSize: '11px', color: t.textMuted, width: '90px', flexShrink: 0 }}>STREET</span>
+                  <span style={{ fontSize: '14px', color: t.text }}>{order.street}</span>
+                </div>
+              )}
+              {(order.city || order.state || order.pincode) && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <span style={{ ...MONO, fontSize: '11px', color: t.textMuted, width: '90px', flexShrink: 0 }}>CITY / PIN</span>
+                  <span style={{ fontSize: '14px', color: t.text }}>
+                    {[order.city, order.state].filter(Boolean).join(', ')}
+                    {order.pincode ? ` — ${order.pincode}` : ''}
+                  </span>
+                </div>
+              )}
+              <CopyAddressButton label={shippingLabelText} t={t} />
+            </div>
+          ) : (
+            <div>
+              <p style={{ color: t.text, lineHeight: 1.7, margin: '0 0 12px', fontSize: '14px' }}>{formattedAddress || '—'}</p>
+              {formattedAddress && <CopyAddressButton label={shippingLabelText} t={t} />}
+            </div>
+          )}
         </Section>
       </div>
 

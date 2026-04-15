@@ -1,7 +1,10 @@
 /* TEAM 2 — Footer: Site footer with links, newsletter, and branding */
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
+  const [newsletterDone, setNewsletterDone] = useState(false);
+
   return (
     <footer className="bg-brand-black text-brand-offwhite">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -50,26 +53,35 @@ export default function Footer() {
           <div>
             <h4 className="font-heading text-lg mb-4 tracking-wide">STAY IN THE LOOP</h4>
             <p className="text-sm text-gray-400 mb-4">Get early access to drops, exclusive deals, and zero spam. Promise.</p>
-            <form onSubmit={(e) => { e.preventDefault(); alert('Subscribed!'); }} className="flex gap-2">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                required
-                className="flex-1 px-4 py-2.5 bg-[#1A1A1A] border border-[#2A2A2A] rounded-pill text-brand-offwhite placeholder:text-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                aria-label="Email for newsletter"
-              />
-              <button
-                type="submit"
-                className="bg-brand-orange hover:bg-brand-orange-hover text-white px-5 py-2.5 rounded-pill text-sm font-medium transition-colors"
-              >
-                Join
-              </button>
-            </form>
+            {newsletterDone ? (
+              <div className="flex items-center gap-2 text-brand-offwhite">
+                <svg className="w-4 h-4 text-brand-orange shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm font-medium">You're on the list.</span>
+              </div>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); setNewsletterDone(true); }} className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  required
+                  className="flex-1 px-4 py-2.5 bg-[#1A1A1A] border border-[#2A2A2A] rounded-pill text-brand-offwhite placeholder:text-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  aria-label="Email for newsletter"
+                />
+                <button
+                  type="submit"
+                  className="bg-brand-orange hover:bg-brand-orange-hover text-white px-5 py-2.5 rounded-pill text-sm font-medium transition-colors"
+                >
+                  Join
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
         <div className="border-t border-[#2A2A2A] mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-500">© 2025 Nøiré. All rights reserved.</p>
+          <p className="text-xs text-gray-500">© 2026 Nøiré. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="/privacy" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Privacy</Link>
             <Link to="/terms" className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Terms</Link>

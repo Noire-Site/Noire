@@ -18,6 +18,15 @@ dist/
 # macOS
 .DS_Store
 
+# Claude Code (local AI config — skills, memory, local settings)
+.claude/
+.agents/
+.impeccable.md
+skills-lock.json
+graphify-out/
+my-video/
+Bash\ tool\ output*
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

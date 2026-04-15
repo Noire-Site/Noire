@@ -25,6 +25,7 @@ import OrdersPage from './pages/admin/OrdersPage';
 import OrderDetail from './pages/admin/OrderDetail';
 import InventoryPage from './pages/admin/InventoryPage';
 import TeamPage from './pages/admin/TeamPage';
+import PromosPage from './pages/admin/PromosPage';
 
 // Pages
 import Home from './pages/Home';
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="/admin/orders/:id" element={guarded(OrderDetail)} />
         <Route path="/admin/inventory" element={guarded(InventoryPage)} />
         <Route path="/admin/team" element={guarded(TeamPage)} />
+        <Route path="/admin/promos" element={guarded(PromosPage)} />
       </Routes>
     );
   }

@@ -1,12 +1,24 @@
 /* TEAM 3 — ProductCard: Card with hover effects, badges, quick-add, wishlist */
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../contexts/WishlistContext';
 
 export default function ProductCard({ product }) {
   const [hovered, setHovered] = useState(false);
+  const [heartPopping, setHeartPopping] = useState(false);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wishlisted = isInWishlist(product.id);
+  const prevWishlisted = useRef(wishlisted);
+
+  // Fire heart pop only when transitioning to wishlisted (not on removal)
+  useEffect(() => {
+    if (wishlisted && !prevWishlisted.current) {
+      setHeartPopping(true);
+      const t = setTimeout(() => setHeartPopping(false), 420);
+      return () => clearTimeout(t);
+    }
+    prevWishlisted.current = wishlisted;
+  }, [wishlisted]);
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -24,11 +36,17 @@ export default function ProductCard({ product }) {
       onMouseLeave={() => setHovered(false)}
     >
       <div className="bg-white dark:bg-[#1A1A1A] rounded-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-        {/* Image */}
+        {/* Image — crossfade between primary and hover via stacked opacity layers */}
         <div className="relative aspect-[3/4] overflow-hidden">
+          {/* Primary image */}
           <div
-            className="absolute inset-0 transition-all duration-500 group-hover:scale-105"
-            style={{ background: hovered ? product.images.hover : product.images.primary }}
+            className={`absolute inset-0 transition-opacity duration-500 ${hovered ? 'opacity-0' : 'opacity-100'}`}
+            style={{ background: product.images.primary }}
+          />
+          {/* Hover image */}
+          <div
+            className={`absolute inset-0 transition-opacity duration-500 ${hovered ? 'opacity-100' : 'opacity-0'}`}
+            style={{ background: product.images.hover }}
           />
 
           {/* Badge */}
@@ -42,19 +60,24 @@ export default function ProductCard({ product }) {
             </span>
           )}
 
-          {/* Wishlist */}
+          {/* Wishlist — always visible on touch, hover-reveal on desktop */}
           <button
             onClick={handleWishlist}
-            className={`absolute top-3 right-3 z-10 p-2 rounded-full transition-all duration-300 ${
-              hovered || wishlisted ? 'opacity-100' : 'opacity-0'
-            } ${wishlisted ? 'bg-brand-orange text-white' : 'bg-white/80 dark:bg-brand-black/80 text-brand-black dark:text-brand-offwhite hover:bg-brand-orange hover:text-white'}`}
+            className={`absolute top-3 right-3 z-10 p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 ${
+              wishlisted ? 'sm:opacity-100 bg-brand-orange text-white' : 'bg-white/80 dark:bg-brand-black/80 text-brand-black dark:text-brand-offwhite hover:bg-brand-orange hover:text-white'
+            }`}
             aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <svg className="w-4 h-4" fill={wishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className={`w-4 h-4 ${heartPopping ? 'animate-heart-pop' : ''}`}
+              fill={wishlisted ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>
-
         </div>
 
         {/* Info */}

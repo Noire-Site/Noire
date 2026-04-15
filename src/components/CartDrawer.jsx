@@ -39,7 +39,7 @@ export default function CartDrawer() {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-brand-gray-light dark:border-[#2A2A2A]">
-          <h2 className="font-heading text-2xl">YOUR BAG ({itemCount})</h2>
+          <h2 className="font-heading text-2xl">YOUR BAG{itemCount > 0 ? ` (${itemCount})` : ''}</h2>
           <button
             onClick={() => setIsOpen(false)}
             className="p-2 hover:bg-brand-gray-light dark:hover:bg-[#2A2A2A] rounded-full transition-colors"
@@ -127,7 +127,7 @@ export default function CartDrawer() {
             <Link
               to="/cart"
               onClick={() => setIsOpen(false)}
-              className="block w-full text-center bg-brand-orange hover:bg-brand-orange-hover text-white py-3.5 rounded-pill font-medium transition-colors"
+              className="block w-full text-center bg-brand-orange hover:bg-brand-orange-hover text-white py-3.5 rounded-pill font-medium transition-all duration-200 active:scale-[0.97]"
             >
               Go to Cart
             </Link>

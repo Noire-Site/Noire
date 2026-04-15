@@ -1,5 +1,6 @@
 /* TEAM 2/3/5 — Homepage: Hero, marquee, featured products, categories, lifestyle grid, newsletter */
 
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
@@ -19,6 +20,7 @@ function FadeIn({ children, className = '' }) {
 export default function Home() {
   const { products, loading } = useProducts();
   const navigate = useNavigate();
+  const [newsletterDone, setNewsletterDone] = useState(false);
   const featured = products.slice(0, 8);
   const categories = [
     { name: 'Men',    subs: ['Hoodies', 'T-Shirts', 'Jackets', 'Joggers'] },
@@ -50,7 +52,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               <Link
                 to="/shop"
-                className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3.5 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3.5 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.97] active:translate-y-0"
               >
                 Shop Now
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -264,21 +266,30 @@ export default function Home() {
             <p className="text-gray-400 max-w-md mx-auto mb-8">
               Early access to new drops, exclusive deals, behind-the-scenes content. No spam, ever.
             </p>
-            <form onSubmit={(e) => { e.preventDefault(); alert('You\'re in!'); }} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                required
-                className="flex-1 px-5 py-3.5 bg-[#1A1A1A] dark:bg-[#2A2A2A] border border-[#2A2A2A] dark:border-[#3A3A3A] rounded-pill text-brand-offwhite placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                aria-label="Email for newsletter"
-              />
-              <button
-                type="submit"
-                className="bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3.5 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5"
-              >
-                Subscribe
-              </button>
-            </form>
+            {newsletterDone ? (
+              <div className="flex items-center justify-center gap-2 text-brand-offwhite">
+                <svg className="w-5 h-5 text-brand-orange shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-medium">You're on the list.</span>
+              </div>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); setNewsletterDone(true); }} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  required
+                  className="flex-1 px-5 py-3.5 bg-[#1A1A1A] dark:bg-[#2A2A2A] border border-[#2A2A2A] dark:border-[#3A3A3A] rounded-pill text-brand-offwhite placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  aria-label="Email for newsletter"
+                />
+                <button
+                  type="submit"
+                  className="bg-brand-orange hover:bg-brand-orange-hover text-white px-8 py-3.5 rounded-pill font-medium transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  Subscribe
+                </button>
+              </form>
+            )}
           </FadeIn>
         </div>
       </section>

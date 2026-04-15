@@ -1,5 +1,5 @@
 /* TEAM 2/3 — Product Detail Page: Gallery, size/color pickers, add to cart, related products */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductsContext';
 import ProductCard from '../components/ProductCard';
@@ -16,8 +16,18 @@ export default function ProductDetail() {
 
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
+
+  // Pre-select first color when product data is available
+  useEffect(() => {
+    if (product?.colors?.length > 0) {
+      const first = product.colors[0];
+      setSelectedColor(first.name || first.hex || '');
+    }
+  }, [product?.id]);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
+  const [heartPopping, setHeartPopping] = useState(false);
+  const prevWishlisted = useRef(false);
   const [added, setAdded] = useState(false);
   const [sizeAlert, setSizeAlert] = useState(false);
 
@@ -46,10 +56,17 @@ export default function ProductDetail() {
   const price = product.salePrice || product.price;
   const lowStock = product.stock < 5;
 
+  const handleWishlist = () => {
+    if (!wishlisted) {
+      setHeartPopping(true);
+      setTimeout(() => setHeartPopping(false), 420);
+    }
+    toggleWishlist(product.id);
+  };
+
   const handleAdd = () => {
     if (!selectedSize) { setSizeAlert(true); return; }
-    const color = selectedColor || product.colors[0]?.name || '';
-    addItem(product, selectedSize, color);
+    addItem(product, selectedSize, selectedColor);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -104,7 +121,7 @@ export default function ProductDetail() {
         {/* Product Info */}
         <div className="lg:py-4">
           <p className="text-sm text-brand-gray uppercase tracking-wider mb-2">{product.category}</p>
-          <h1 className="font-heading text-4xl sm:text-5xl mb-4">{product.name.toUpperCase()}</h1>
+          <h1 className="font-heading text-4xl sm:text-5xl mb-4 uppercase">{product.name}</h1>
 
           {/* Price */}
           <div className="flex items-center gap-3 mb-6">
@@ -124,21 +141,24 @@ export default function ProductDetail() {
           {/* Color picker */}
           <div className="mb-6">
             <h3 className="text-sm font-medium mb-3">
-              Color: <span className="text-brand-gray">{selectedColor || product.colors[0]?.name || '—'}</span>
+              Color: <span className="text-brand-gray">{selectedColor || '—'}</span>
             </h3>
             <div className="flex gap-3">
-              {product.colors.map(c => (
-                <button
-                  key={c.hex}
-                  onClick={() => setSelectedColor(c.name)}
-                  className={`w-10 h-10 rounded-full border-2 transition-all ${
-                    (selectedColor || product.colors[0]?.name) === c.name ? 'border-brand-orange scale-110' : 'border-brand-gray-light dark:border-[#2A2A2A]'
-                  }`}
-                  style={{ backgroundColor: c.hex }}
-                  aria-label={`Select color ${c.name}`}
-                  title={c.name}
-                />
-              ))}
+              {product.colors.map(c => {
+                const colorId = c.name || c.hex || '';
+                return (
+                  <button
+                    key={c.hex || c.name}
+                    onClick={() => setSelectedColor(colorId)}
+                    className={`w-10 h-10 rounded-full border-2 transition-all ${
+                      selectedColor === colorId ? 'border-brand-orange scale-110' : 'border-brand-gray-light dark:border-[#2A2A2A]'
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                    aria-label={`Select color ${colorId}`}
+                    title={colorId}
+                  />
+                );
+              })}
             </div>
           </div>
 
@@ -148,7 +168,7 @@ export default function ProductDetail() {
               <h3 className="text-sm font-medium">Size</h3>
               <button
                 onClick={() => setSizeGuideOpen(true)}
-                className="text-xs text-brand-orange hover:text-brand-orange-hover transition-colors underline"
+                className="text-xs text-brand-orange hover:text-brand-orange-hover transition-colors"
               >
                 Size Guide
               </button>
@@ -182,22 +202,29 @@ export default function ProductDetail() {
           <div className="flex gap-3 mb-8">
             <button
               onClick={handleAdd}
-              className={`flex-1 py-4 rounded-pill font-medium text-white transition-all duration-300 ${
-                added ? 'bg-green-600' : 'bg-brand-orange hover:bg-brand-orange-hover hover:-translate-y-0.5'
+              className={`flex-1 py-4 rounded-pill font-medium text-white transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.97] ${
+                added ? 'bg-brand-black dark:bg-[#1A1A1A]' : 'bg-brand-orange hover:bg-brand-orange-hover hover:-translate-y-0.5'
               }`}
             >
-              {added ? '✓ Added to Bag' : 'Add to Bag'}
+              {added ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Added to Bag
+                </>
+              ) : 'Add to Bag'}
             </button>
             <button
-              onClick={() => toggleWishlist(product.id)}
-              className={`p-4 rounded-full border-2 transition-all ${
+              onClick={handleWishlist}
+              className={`p-4 rounded-full border-2 transition-all active:scale-[0.92] ${
                 wishlisted
                   ? 'border-brand-orange bg-brand-orange text-white'
                   : 'border-brand-gray-light dark:border-[#2A2A2A] hover:border-brand-orange hover:text-brand-orange'
               }`}
               aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <svg className="w-5 h-5" fill={wishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className={`w-5 h-5 ${heartPopping ? 'animate-heart-pop' : ''}`} fill={wishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
